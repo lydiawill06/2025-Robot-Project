@@ -33,7 +33,10 @@ int main(void)
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Left Optosensor Value1: ", left_opto.Value());
-
+    LCD.WriteLine("Left Optosensor Value1: ");
+    LCD.WriteLine(left_opto.Value());
+    Sleep(3.0);
+    
     // Left Optosensor off straight line
     LCD.Clear(BLACK);
     LCD.WriteLine("Place left optosensor off straight line");
@@ -43,67 +46,57 @@ int main(void)
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Left Optosensor Value2: ", left_opto.Value());
+    LCD.WriteLine("Left Optosensor Value2: ");
+    LCD.WriteLine(left_opto.Value());
+    Sleep(3.0);
 
-    // Repeat process for remaining optosensors, and repeat all three for the curved line values
-    // middle optosensor
-    LCD.Clear(BLACK);
-    LCD.SetFontColor(WHITE);
-
-    LCD.WriteLine("Touch the screen");
-    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
-
-    // Record values for optosensors on and off of the straight line
-    // middle Optosensor on straight line
     LCD.Clear(BLACK);
     LCD.WriteLine("Place middle optosensor on straight line");
     Sleep(0.25); // Wait to avoid double input
-    LCD.WriteLine("Touch screen to record value (1/12)");
+    LCD.WriteLine("Touch screen to record value (3/12)");
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Middle Optosensor Value1: ", middle_opto.Value());
-
-    // Middle Optosensor off straight line
+    LCD.WriteLine("Middle Optosensor Value1: ");
+    LCD.WriteLine(middle_opto.Value());
+    Sleep(3.0);
+    
     LCD.Clear(BLACK);
-    LCD.WriteLine("Place middle optosensor off straight line");
+    LCD.WriteLine("Place middle optosensor on straight line");
     Sleep(0.25); // Wait to avoid double input
-    LCD.WriteLine("Touch screen to record value (2/12)");
+    LCD.WriteLine("Touch screen to record value (4/12)");
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Middle Optosensor Value2: ", middle_opto.Value());
+    LCD.WriteLine("Middle Optosensor Value2: ");
+    LCD.WriteLine(middle_opto.Value());
+    Sleep(3.0);
 
-    // Close output file
-    // right
-
-    LCD.Clear(BLACK);
-    LCD.SetFontColor(WHITE);
-
-    LCD.WriteLine("Touch the screen");
-    while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-    while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
-
-    // Record values for optosensors on and off of the straight line
-    // Right Optosensor on straight line
     LCD.Clear(BLACK);
     LCD.WriteLine("Place right optosensor on straight line");
     Sleep(0.25); // Wait to avoid double input
-    LCD.WriteLine("Touch screen to record value (1/12)");
+    LCD.WriteLine("Touch screen to record value (5/12)");
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Right Optosensor Value1: ", right_opto.Value());
-
-    // Right Optosensor off straight line
+    LCD.WriteLine("Right Optosensor Value1: ");
+    LCD.WriteLine(right_opto.Value());
+    Sleep(3.0);
+    
     LCD.Clear(BLACK);
-    LCD.WriteLine("Place left optosensor off straight line");
+    LCD.WriteLine("Place right optosensor on straight line");
     Sleep(0.25); // Wait to avoid double input
-    LCD.WriteLine("Touch screen to record value (2/12)");
+    LCD.WriteLine("Touch screen to record value (6/12)");
     while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
     while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
     // Write the value returned by the optosensor to your output file
     SD.FPrintf(fptr, "Right Optosensor Value2: ", right_opto.Value());
+    LCD.WriteLine("Right Optosensor Value2: ");
+    LCD.WriteLine(right_opto.Value());
+    Sleep(3.0);
 
     // Print end message to screen
     SD.FClose(fptr);
