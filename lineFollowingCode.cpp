@@ -24,7 +24,7 @@ AnalogInputPin left_opto(FEHIO::P1_7);
 
 void move_forward() //using encoders
 {
-    int percent = 0.25;
+    int percent = 25;
     int counts = 40;
     //Reset encoder counts
     right_encoder.ResetCounts();
@@ -44,7 +44,7 @@ void move_forward() //using encoders
 }
 
 void turn_left(){
-    int percent = 0.25;
+    int percent = 25;
     int counts = 10;
     right_motor.SetPercent(-1 * (percent));
     left_motor.SetPercent(-1 * (percent));
@@ -52,7 +52,7 @@ void turn_left(){
 }
 
 void turn_right(){
-    int percent = 0.25;
+    int percent = 25;
     int counts = 10;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(percent);
