@@ -7,18 +7,18 @@ DigitalEncoder right_encoder(FEHIO::P0_0);
 DigitalEncoder left_encoder(FEHIO::P0_1);
 FEHMotor right_motor(FEHMotor::Motor0,9.0);
 FEHMotor left_motor(FEHMotor::Motor1,9.0);
-DigitalInputPin frontRight(FEHIO::P0_0);
+DigitalInputPin frontRight(FEHIO::P3_7);
 DigitalInputPin backRight(FEHIO::P0_1);
 DigitalInputPin frontLeft(FEHIO::P3_7);
 DigitalInputPin backLeft(FEHIO::P3_6);
-AnalogInputPin right_opto(FEHIO::P2_0);
-AnalogInputPin middle_opto(FEHIO::P2_1);
-AnalogInputPin left_opto(FEHIO::P2_2);
+AnalogInputPin right_opto(FEHIO::P2_5);
+AnalogInputPin middle_opto(FEHIO::P3_6);
+AnalogInputPin left_opto(FEHIO::P1_7);
 
 #define leftOffLow 0
-#define leftOffHigh 1
+#define leftOffHigh 2
 #define rightOffLow 0
-#define rightOffHigh 1
+#define rightOffHigh 2
 
 //drive for 1 function
 
@@ -41,16 +41,6 @@ void move_forward() //using encoders
     //Turn off motors
     right_motor.Stop();
     left_motor.Stop();
-}
-
-int pressed() {
-    if (frontRight.Value() == 0 || frontLeft.Value() == 0) {
-        return 1;
-    } else if (backRight.Value() == 0 || backLeft.Value() == 0) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 void turn_left(){
@@ -80,7 +70,7 @@ void check_line(){
 }
 
 int main (void) {
-    while(pressed() == 1){
+    while(!LCD.Touch(&x,&y)){
     check_line();
     move_forward();
     }
