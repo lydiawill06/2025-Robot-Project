@@ -69,6 +69,7 @@ void turn_right(){
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts)
 } 
 
+//currently will move in a circle if the optosensor has crossed over the line
 void check_line(){
     while((leftOffLow <= left_opto.Value()) && (left_opto.Value() <= leftOffHigh)) {
         turn_left();
