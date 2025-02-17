@@ -54,13 +54,19 @@ int pressed() {
 }
 
 void turn_left(){
-    right_motor.SetPercent(-50);
-    left_motor.SetPercent(50);
+    int percent = 0.25;
+    int counts = 10;
+    right_motor.SetPercent(-1 * (percent));
+    left_motor.SetPercent(-1 * (percent));
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts)
 }
 
 void turn_right(){
-    right_motor.SetPercent(50);
-    left_motor.SetPercent(-50);
+    int percent = 0.25;
+    int counts = 10;
+    right_motor.SetPercent(percent);
+    left_motor.SetPercent(percent);
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts)
 } 
 
 void check_line(){
