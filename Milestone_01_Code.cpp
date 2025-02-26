@@ -55,6 +55,7 @@ int main(void)
     //Drive Across Lower Level
     move_forward(motor_percent, expected_counts); //see function
     Sleep(2.0); //Wait for counts to stabilize
+
     //Print out data
     LCD.Write("Theoretical Counts: ");
     LCD.WriteLine(expected_counts);
@@ -75,7 +76,7 @@ int main(void)
 
      //Set motor Percent and Expected Counts
      motor_percent = 60;
-     expected_counts = 33.7408479355*20;
+     expected_counts = 33.7408479355*25;
 
      move_forward(motor_percent, expected_counts); //see function
      Sleep(2.0); //Wait for counts to stabilize
@@ -94,7 +95,7 @@ int main(void)
 
      //Set motor Percent and Expected Counts
      motor_percent = -20;
-     expected_counts = 33.7408479355*25;
+     expected_counts = 33.7408479355*30;
 
      move_forward(motor_percent, expected_counts); //see function
      Sleep(2.0); //Wait for counts to stabilize
