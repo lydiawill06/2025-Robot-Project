@@ -79,22 +79,29 @@ void driveSpecifiedDistance(float inches) {
 
     float distanceTraveled = 0;
 
+    LCD.WriteLine("check 1");
+
     while (distanceTraveled < inches) {
 
         ti = time(NULL);
         
         float leftcounts = left_encoder.Counts(), rightcounts = right_encoder.Counts();//read counts
 
-        while ((ti-time(NULL))<0.1){};
+        LCD.WriteLine("check 2");
+
+        float tf = time(NULL);
+        while ((ti-tf)<0.1){ tf = time(NULL); };
+
+        LCD.WriteLine("check 3");
         
         float control_signal = PIAdjust();
 
         right_motor.SetPercent(OG_MOTORPOWER + control_signal);
         float adjustedpower = OG_MOTORPOWER+control_signal;
-        LCD.Write(adjustedpower);
+        LCD.WriteLine(adjustedpower);
 
         distanceTraveled = DISTANCEPERCOUNTS*leftcounts + distanceTraveled;
-        LCD.Write(distanceTraveled);
+        LCD.WriteLine(distanceTraveled);
 
         //left_motor.SetPercent(LeftOldMotorPower + PIAdjust());
 
@@ -110,6 +117,8 @@ void driveSpecifiedDistance(float inches) {
 int main() {
     right_motor.SetPercent(OG_MOTORPOWER);
     left_motor.SetPercent(OG_MOTORPOWER);
+
+    LCD.WriteLine("start");
 
     driveSpecifiedDistance(5);
 
