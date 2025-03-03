@@ -71,8 +71,7 @@ void check_light(){
   turn_right(90);
   move_forward(7);
 
-  while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-  while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+  Sleep(10.0);
   
   turn_right(90);
   move_forward(2);
