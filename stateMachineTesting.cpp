@@ -19,6 +19,8 @@ AnalogInputPin left_opto(FEHIO::P1_7);
 #define leftOffHigh 2
 #define rightOffLow 0
 #define rightOffHigh 2
+#define middleOffLow 0
+#define middleOffHigh 2
 
 //States for state machine
 enum LineStates { 
@@ -92,31 +94,40 @@ int main (void) {
         switch(state) { 
         // If I am in the middle of the line...
         case MIDDLE:
-        // Set motor powers for driving straight
-        right_motor.SetPercent(30);
-        left_motor.SetPercent(30);
+            // Set motor powers for driving straight
+            right_motor.SetPercent(30);
+            left_motor.SetPercent(30);
 
-        if ( /* Right sensor is on line */ ) {
-            state = RIGHT; // update a new state
-        } 
+            if ((rightOffLow <= right_opto.Value()) && (right_opto.Value() < rightOffHigh)) {
+                state = RIGHT; // update a new state
+            } 
 
-        /* Code for if left sensor is on the line */
-        break; 
+            if ((leftOffLow <= left_opto.Value()) && (left_opto.Value() < leftOffHigh)) {
+                state = LEFT; // update a new state
+            } 
 
+            break; 
         // If the right sensor is on the line... 
         case RIGHT:
         // Set motor powers for right turn
-        /* Drive */
+            right_motor.SetPercent(10);
+            left_motor.SetPercent(25);
 
-        if( /* I no longer need to turn right… */ ) { 
-            /* update a new state */
-        } 
-        break; 
+            if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
+                state = MIDDLE; // update a new state
+            } 
+            break; 
 
         // If the left sensor is on the line... 
          case LEFT:
-        /* Mirror operation of RIGHT state */
-        break; 
+            right_motor.SetPercent(25);
+            left_motor.SetPercent(10);
+
+            if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
+                state = MIDDLE; // update a new state
+            } 
+            break;
+
     default: // Error. Something is very wrong.
         break; 
     } 
