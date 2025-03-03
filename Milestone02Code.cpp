@@ -36,7 +36,7 @@ void turn_left(int degree){
 
 
     int percent = 25;
-    int counts = degree * 2.00000000000;
+    int counts = degree * 2.1000000;
     right_motor.SetPercent(-1*(percent));
     left_motor.SetPercent((percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -50,9 +50,9 @@ void turn_right(int degree){
     //Reset Counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
-    
+
     int percent = 25;
-    int counts = degree * 2.00000000000;
+    int counts = degree * 2.1000000;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(-1* (percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -81,5 +81,8 @@ Sleep(10.0);
 }
 
 int main (void) {
+  float x, y;
+  while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
+  while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
   check_light();
 }
