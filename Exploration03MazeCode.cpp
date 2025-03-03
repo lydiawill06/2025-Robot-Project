@@ -2,28 +2,30 @@
 #include <FEHIO.h>
 #include <FEHMotor.h>
 #include <math.h>
+#include <FEHBattery.h>
 
 // Can change the following if one motor is slower than another.
 #define LEFT_MOTOR_CORRECTION_FACTOR 1
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
-#define MOTOR_PERCENTAGE 25
+#define MOTOR_PERCENTAGE (11.5/Battery.Voltage()) * 25;
 #define ONE_DEGREE_COUNTS 2.47333333
 
-FEHMotor left_motor(FEHMotor::Motor0, 9.0);
-FEHMotor right_motor(FEHMotor::Motor1, 9.0);
-DigitalEncoder right_encoder(FEHIO::P0_0);
-DigitalEncoder left_encoder(FEHIO::P0_1);
+FEHMotor left_motor(FEHMotor::Motor1, 9.0);
+FEHMotor right_motor(FEHMotor::Motor2, 9.0);
+DigitalEncoder right_encoder(FEHIO::P3_0);
+DigitalEncoder left_encoder(FEHIO::P3_1);
 
-DigitalInputPin distanceSensor(FEHIO::P3_0); // Distance sensor should be plugged into Port 0 in Bank 3
+DigitalInputPin distanceSensor(FEHIO::P3_7); // Distance sensor should be plugged into Port 0 in Bank 3
 
 void driveUntilSensorDetected()
 {
     // Drive backwards until an object is detected
-    left_motor.SetPercent(-1 * LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
-    right_motor.SetPercent(-1 * RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
-
+    while (distanceSensor.Value() != 0){
+    left_motor.SetPercent(1 * LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
+    right_motor.SetPercent(-1 * RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
+    }
     /* TODO: Drive until a wall is detected */
 
     left_motor.Stop();
@@ -36,16 +38,16 @@ void turn(float degree)
     if (degree<0){
         //turn right
         counts = counts * -1;
-        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
-        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+        left_motor.SetPercent(1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
         while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-
     } 
     
+
     if (degree>0){
         //turn left
-        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
-        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        right_motor.SetPercent(-1 * (RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
         while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
     }
 }
@@ -60,8 +62,8 @@ void drive(float distance)
      left_encoder.ResetCounts();
  
      //Set both motors to desired percent
-     right_motor.SetPercent(RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
-     left_motor.SetPercent(LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE);
+     right_motor.SetPercent(RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
+     left_motor.SetPercent(LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
  
      //While the average of the left and right encoder is less than counts,
      //keep running motors
