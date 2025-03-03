@@ -1,3 +1,4 @@
+
 /*
 linear speed: distancepercount*(delta counts/delta time)
 
@@ -26,7 +27,7 @@ D = D*(Current - Previous Error) --> EDiff = E - EPrev
 
 #define COUNTSPERDISTANCE 33.7408479355
 #define DISTANCEPERCOUNTS (1/COUNTSPERDISTANCE)  // Example: define this as per your system
-#define OG_MOTORPOWER -25.0 //find out what speed this translates to
+#define OG_MOTORPOWER -10.0 //find out what speed this translates to
 
 FEHMotor right_motor(FEHMotor::Motor2, 9.0); 
 FEHMotor left_motor(FEHMotor::Motor1, 9.0); 
@@ -45,7 +46,7 @@ float leftcounts, rightcounts;
 float PIAdjust(){
     
     float pterm, iterm;
-    float p=0.5, i=0.1;
+    float p=0.75, i=0.1;
 
     float newleftcounts = left_encoder.Counts(), newrightcounts = right_encoder.Counts(), diffleftcounts = newleftcounts-leftcounts, diffrightcounts = newrightcounts-rightcounts; //read new counts, take difference
     float tf = time(NULL);
@@ -89,8 +90,11 @@ void driveSpecifiedDistance(float inches) {
         float control_signal = PIAdjust();
 
         right_motor.SetPercent(OG_MOTORPOWER + control_signal);
+        float adjustedpower = OG_MOTORPOWER+control_signal;
+        LCD.Write(adjustedpower);
 
         distanceTraveled = DISTANCEPERCOUNTS*leftcounts + distanceTraveled;
+        LCD.Write(distanceTraveled);
 
         //left_motor.SetPercent(LeftOldMotorPower + PIAdjust());
 
