@@ -8,7 +8,8 @@
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
-#define MOTOR_PERCENTAGE /* TODO: Insert formula for motor percent based on controller battery power */
+#define MOTOR_PERCENTAGE 25
+#define ONE_DEGREE_COUNTS 2.47333333
 
 FEHMotor left_motor(FEHMotor::Motor0, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
@@ -31,7 +32,22 @@ void driveUntilSensorDetected()
 
 void turn(float degree)
 {
-    /* TODO: Turn <code>degree</code> degrees using shaft encoding, timing, or bump switches */
+    int counts = ONE_DEGREE_COUNTS * degree;
+    if (degree<0){
+        //turn right
+        counts = counts * -1;
+        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    } 
+    
+    if (degree>0){
+        //turn left
+        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * MOTOR_PERCENTAGE));
+        while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+    }
 }
 
 void drive(float distance)
@@ -63,12 +79,12 @@ int main(void)
 
     // Move forward a little bit for the Crayola bot to have some space to turn
     drive(1);
-    turn(90);
+    turn(-90);
 
     /* TODO: Complete the rest of the maze navigation */
     driveUntilSensorDetected(); 
     drive(1);
-    turn(-90);
+    turn(90);
 
     driveUntilSensorDetected(); 
 }
