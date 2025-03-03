@@ -95,8 +95,8 @@ int main (void) {
         // If I am in the middle of the line...
         case MIDDLE:
             // Set motor powers for driving straight
-            right_motor.SetPercent(30);
-            left_motor.SetPercent(30);
+            right_motor.SetPercent(-30);
+            left_motor.SetPercent(-30);
 
             if ((rightOffLow <= right_opto.Value()) && (right_opto.Value() < rightOffHigh)) {
                 state = RIGHT; // update a new state
@@ -110,8 +110,8 @@ int main (void) {
         // If the right sensor is on the line... 
         case RIGHT:
         // Set motor powers for right turn
-            right_motor.SetPercent(10);
-            left_motor.SetPercent(25);
+            right_motor.SetPercent(-10);
+            left_motor.SetPercent(-30);
 
             if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
                 state = MIDDLE; // update a new state
@@ -120,8 +120,8 @@ int main (void) {
 
         // If the left sensor is on the line... 
          case LEFT:
-            right_motor.SetPercent(25);
-            left_motor.SetPercent(10);
+            right_motor.SetPercent(-30);
+            left_motor.SetPercent(-10);
 
             if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
                 state = MIDDLE; // update a new state
