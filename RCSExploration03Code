@@ -1,0 +1,8 @@
+#include FEHRCS.h // RCS functions are available in this library
+
+int main(void)
+{
+ RCS.InitializeTouchMenu("add_your_string_here"); // Run Menu to select Region (e.g., A, B, C, D)
+ int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+ LCD.WriteLine( RCS.Time() ); // Get the match time remaining
+}
