@@ -83,10 +83,13 @@ int main(void)
     drive(1);
     turn(-90);
 
+    drive(3);
+
     /* TODO: Complete the rest of the maze navigation */
     driveUntilSensorDetected(); 
     drive(1);
     turn(90);
+    drive(3);
 
     driveUntilSensorDetected(); 
 }
