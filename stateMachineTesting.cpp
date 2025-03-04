@@ -3,17 +3,13 @@
 #include <FEHUtility.h>
 #include <FEHMotor.h>
 
-DigitalEncoder right_encoder(FEHIO::P0_0);
-DigitalEncoder left_encoder(FEHIO::P0_1);
-FEHMotor right_motor(FEHMotor::Motor0,9.0);
+DigitalEncoder right_encoder(FEHIO::P1_4);
+DigitalEncoder left_encoder(FEHIO::P1_5);
+FEHMotor right_motor(FEHMotor::Motor3,9.0);
 FEHMotor left_motor(FEHMotor::Motor1,9.0);
-DigitalInputPin frontRight(FEHIO::P0_4);
-DigitalInputPin backRight(FEHIO::P1_0);
-DigitalInputPin frontLeft(FEHIO::P3_7);
-DigitalInputPin backLeft(FEHIO::P3_5);
-AnalogInputPin right_opto(FEHIO::P2_5);
-AnalogInputPin middle_opto(FEHIO::P3_6);
-AnalogInputPin left_opto(FEHIO::P1_7);
+AnalogInputPin right_opto(FEHIO::P2_3);
+AnalogInputPin middle_opto(FEHIO::P2_4);
+AnalogInputPin left_opto(FEHIO::P2_5);
 
 #define leftOffLow 0
 #define leftOffHigh 2
@@ -35,7 +31,7 @@ enum LineStates {
 void move_forward() //using encoders
 {
     int percent = 25;
-    int counts = 20;
+    int counts = 2000;
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
@@ -95,8 +91,8 @@ int main (void) {
         // If I am in the middle of the line...
         case MIDDLE:
             // Set motor powers for driving straight
-            right_motor.SetPercent(-30);
-            left_motor.SetPercent(-30);
+            right_motor.SetPercent(30);
+            left_motor.SetPercent(30);
 
             if ((rightOffLow <= right_opto.Value()) && (right_opto.Value() < rightOffHigh)) {
                 state = RIGHT; // update a new state
@@ -110,8 +106,8 @@ int main (void) {
         // If the right sensor is on the line... 
         case RIGHT:
         // Set motor powers for right turn
-            right_motor.SetPercent(-10);
-            left_motor.SetPercent(-30);
+            right_motor.SetPercent(10);
+            left_motor.SetPercent(30);
 
             if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
                 state = MIDDLE; // update a new state
@@ -120,8 +116,8 @@ int main (void) {
 
         // If the left sensor is on the line... 
          case LEFT:
-            right_motor.SetPercent(-30);
-            left_motor.SetPercent(-10);
+            right_motor.SetPercent(30);
+            left_motor.SetPercent(10);
 
             if((middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) { 
                 state = MIDDLE; // update a new state
@@ -132,5 +128,5 @@ int main (void) {
         break; 
     } 
     Sleep(0.25);
-   } 
+   }
 }
