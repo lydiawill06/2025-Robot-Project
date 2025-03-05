@@ -23,39 +23,46 @@ D = D*(Current - Previous Error) --> EDiff = E - EPrev
 #include <FEHIO.h>
 #include <FEHUtility.h>
 #include <FEHMotor.h>
+#include <FEHSD.h> 
 
 
 #define COUNTSPERDISTANCE 33.7408479355
-#define DISTANCEPERCOUNTS (1/COUNTSPERDISTANCE)  // Example: define this as per your system
-#define OG_MOTORPOWER -10.0 //find out what speed this translates to
+#define DISTANCEPERCOUNTS 0.02963767  // Example: define this as per your system
+#define OG_MOTORPOWER 10.0 //find out what speed this translates to
 
 FEHMotor right_motor(FEHMotor::Motor2, 9.0); 
 FEHMotor left_motor(FEHMotor::Motor1, 9.0); 
 //Declarations for encoders & motors
-DigitalEncoder right_encoder(FEHIO::P0_0);
-DigitalEncoder left_encoder(FEHIO::P0_1);
+DigitalEncoder right_encoder(FEHIO::P1_6);
+DigitalEncoder left_encoder(FEHIO::P1_4);
 
 float RightOldMotorPower = OG_MOTORPOWER, LeftOldMotorPower = OG_MOTORPOWER;
 
 float expectedcount; //experimentally determined
 
-float deltatime, ti, error = 0;
+float deltatime, ti, sumerror = 0;
 
 float leftcounts, rightcounts;
 
-float PIAdjust(){
-    
+float PIAdjust(float ti, float leftcounts, float rightcounts){
+        
+    //FEHFile *fptr = SD.FOpen("PIDtest.txt","w");
+
     float pterm, iterm;
-    float p=0.75, i=0.1;
+    float p=0.5, i=0.0;
 
     float newleftcounts = left_encoder.Counts(), newrightcounts = right_encoder.Counts(), diffleftcounts = newleftcounts-leftcounts, diffrightcounts = newrightcounts-rightcounts; //read new counts, take difference
-    float tf = time(NULL);
-    deltatime = ti-tf;
+    float tf = TimeNow();
+    float deltatime = tf-ti;
     float leftcountpersec = leftcounts/deltatime;
     float rightcountpersec = rightcounts/deltatime;
 
     float error = leftcountpersec-rightcountpersec;
     float sumerror = sumerror + error;
+    
+    //SD.FPrintf(fptr,"error: %f", error);
+    //SD.FPrintf(fptr,"sum error: %f", sumerror);
+    
 
     pterm = p*error;
     iterm = i*sumerror;
@@ -74,34 +81,64 @@ I = I*(Cumulative Error), I experimentally determined --> ESum = ESum + E
 
 void driveSpecifiedDistance(float inches) {
     
-    float integrated = 0;//whats the point in declaring this here? PIAdjust recalculates this each time anyway?
+    FEHFile *fptr = SD.FOpen("PIDtest.txt","w");
+    float i = 0;//whats the point in declaring this here? PIAdjust recalculates this each time anyway?
     float p = 0;
 
     float distanceTraveled = 0;
 
-    LCD.WriteLine("check 1");
+    SD.FPrintf(fptr,"check 1");
+    //LCD.WriteLine("check 1");
 
     while (distanceTraveled < inches) {
 
-        ti = time(NULL);
+        ti = TimeNow();
         
         float leftcounts = left_encoder.Counts(), rightcounts = right_encoder.Counts();//read counts
-
-        LCD.WriteLine("check 2");
-
-        float tf = time(NULL);
-        while ((ti-tf)<0.1){ tf = time(NULL); };
-
-        LCD.WriteLine("check 3");
         
-        float control_signal = PIAdjust();
+        SD.FPrintf(fptr,"left count: %f", leftcounts);
+        SD.FPrintf(fptr,"right count: %f", rightcounts);
 
-        right_motor.SetPercent(OG_MOTORPOWER + control_signal);
-        float adjustedpower = OG_MOTORPOWER+control_signal;
-        LCD.WriteLine(adjustedpower);
+        //LCD.WriteLine("left count:");
+        //LCD.WriteLine(leftcounts);
+        //LCD.WriteLine("right count:");
+        //LCD.WriteLine(rightcounts);
 
-        distanceTraveled = DISTANCEPERCOUNTS*leftcounts + distanceTraveled;
-        LCD.WriteLine(distanceTraveled);
+        SD.FPrintf(fptr,"check 2");
+        //LCD.WriteLine("check 2");
+
+        float tf = TimeNow();
+        while ((tf-ti)<0.01){ 
+            
+            SD.FPrintf(fptr,"check 2.5");
+            //LCD.WriteLine("check 2.5");
+            tf = TimeNow(); };
+            
+        //LCD.WriteLine("check 3");
+        SD.FPrintf(fptr,"check 3");
+        
+        float control_signal = PIAdjust(ti, leftcounts, rightcounts);
+        float adjustedpower = OG_MOTORPOWER + control_signal;
+        if (adjustedpower>50){adjustedpower = 50;}
+
+        SD.FPrintf(fptr,"adjust: %f", control_signal);
+        //LCD.WriteLine("adjust: ");
+        //LCD.WriteLine(control_signal);
+
+        right_motor.SetPercent(adjustedpower);
+        
+        SD.FPrintf(fptr,"adjustpower: %f", adjustedpower);
+        //LCD.WriteLine("adjustedpower: ");
+        //LCD.WriteLine(adjustedpower);
+
+        distanceTraveled = DISTANCEPERCOUNTS*diffleftcounts;
+        
+        SD.FPrintf(fptr,"distance traveled within loop: %f", DISTANCEPERCOUNTS*leftcounts);
+        //LCD.WriteLine(DISTANCEPERCOUNTS*leftcounts);
+        
+        SD.FPrintf(fptr,"distance traveled total: %f", distanceTraveled);
+        //LCD.WriteLine("distanceTraveled: ");
+        //LCD.WriteLine(distanceTraveled);
 
         //left_motor.SetPercent(LeftOldMotorPower + PIAdjust());
 
@@ -115,12 +152,20 @@ void driveSpecifiedDistance(float inches) {
 }
 
 int main() {
+    
+    FEHFile *fptr = SD.FOpen("PIDtest.txt","w");
+    
     right_motor.SetPercent(OG_MOTORPOWER);
     left_motor.SetPercent(OG_MOTORPOWER);
 
-    LCD.WriteLine("start");
+    SD.FPrintf(fptr,"start");
+    //LCD.WriteLine("start");
 
     driveSpecifiedDistance(5);
 
+    SD.FClose(fptr);
+
     return 0;
 }
+
+//issue is with encoder counts, left motor stays low, right motor shoots up to cover the discrepency in counts
