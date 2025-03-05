@@ -132,7 +132,7 @@ int main (void) {
 
   //Drive backwards and then down ramp all the way to the button
   move_forward(-25, 15);
-  turn_right(90);
+  turn_left(90);
   move_forward(25, 12);
   move_forward(15, 12);
   move_forward(25, 20);
