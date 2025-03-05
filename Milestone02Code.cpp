@@ -7,8 +7,8 @@
 #include <FEHMotor.h>
 #include <FEHBattery.h>
 
-FEHMotor left_motor(FEHMotor::Motor1, 9.0);
-FEHMotor right_motor(FEHMotor::Motor2, 9.0);
+FEHMotor left_motor(FEHMotor::Motor2, 9.0);
+FEHMotor right_motor(FEHMotor::Motor1, 9.0);
 DigitalEncoder right_encoder(FEHIO::P1_6);
 DigitalEncoder left_encoder(FEHIO::P1_4);
 AnalogInputPin CDS_Sensor(FEHIO::P1_7);
@@ -71,13 +71,13 @@ void turn_right(int degree){
     //ADD: read line color
     float Color;
   
-    //Find value of CDS cell to determine color
-    Color = CDS_Sensor.Value();
+  /* //Find value of CDS cell to determine color
+  Color = CDS_Sensor.Value();
 
   //Go left or right based on color
   if(Color > Value that means red) //Light is blue
   {
-    //Go to Blue
+    //Go to Red
     LCD.WriteLine("RED");
     turn_left(90);
     move_forward(25, 2);
@@ -97,7 +97,7 @@ void turn_right(int degree){
   
   if(Color > Value that means red) //Light is blue
   {
-    //Go to Red
+    //Go to Blue
     LCD.WriteLine("BLUE");
     turn_right(90);
     move_forward(25, 2);
@@ -112,7 +112,42 @@ void turn_right(int degree){
     turn_right(90);
     move_forward(-25, 2);
     turn_left(90);
-  }
+  }*/
+
+  //Go to Blue
+  LCD.WriteLine("BLUE");
+  turn_left(90);
+  move_forward(25, 2.5);
+  turn_right(90);
+  move_forward(25, 7.5);
+
+  //Sleep for 2 Seconds
+  Sleep(2.0);
+
+  //Go Back to Starting Position
+  move_forward(-25, 6.5);
+  turn_left(90);
+  move_forward(-25, 2.5);
+  turn_right(90);
+
+
+Sleep(3.0);
+
+  //Go to Red
+  LCD.WriteLine("RED");
+  turn_right(90);
+  move_forward(25, 2.5);
+  turn_left(90);
+  move_forward(25, 7.5);
+
+  //Sleep for 2 Seconds
+  Sleep(2.0);
+
+  //Go Back to Starting Position
+  move_forward(-25, 6.5);
+  turn_right(90);
+  move_forward(-25, 2.5);
+  turn_left(90);
 }
 
 int main (void) {
@@ -121,11 +156,13 @@ int main (void) {
   while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
 
   //Drive Up Ramp
-  turn_right(32);
-  move_forward(45, 45); //see function
+  turn_right(65);
+  move_forward(25, 8); //see function
+  turn_left(22);
+  move_forward(45, 32.5); //see function
   Sleep(2.0); //Wait for counts to stabilize
   turn_left(90);
-  move_forward(25, 15);
+  move_forward(25, 18);
 
   //Press Humidifer Button
   check_light();
@@ -133,7 +170,5 @@ int main (void) {
   //Drive backwards and then down ramp all the way to the button
   move_forward(-25, 15);
   turn_left(90);
-  move_forward(25, 12);
-  move_forward(15, 12);
-  move_forward(25, 20);
+  move_forward(25, 42);
 }
