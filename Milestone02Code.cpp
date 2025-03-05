@@ -121,18 +121,18 @@ int main (void) {
   while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
 
   //Drive Up Ramp
-  move_forward(45, 25); //see function
+  turn_right(37);
+  move_forward(45, 45); //see function
   Sleep(2.0); //Wait for counts to stabilize
-
-  while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-  while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+  turn_left(95);
+  move_forward(25, 15);
 
   //Press Humidifer Button
   check_light();
 
   //Drive backwards and then down ramp all the way to the button
   move_forward(-25, 15);
-  turn_right(90);
+  turn_left(90);
   move_forward(25, 12);
   move_forward(15, 12);
   move_forward(25, 20);
