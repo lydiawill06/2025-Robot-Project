@@ -159,7 +159,7 @@ int main (void) {
   turn_right(65);
   move_forward(25, 8); //see function
   turn_left(22);
-  move_forward(45, 32.5); //see function
+  move_forward(45, 33); //see function
   Sleep(2.0); //Wait for counts to stabilize
   turn_left(90);
   move_forward(25, 18);
@@ -168,7 +168,7 @@ int main (void) {
   check_light();
 
   //Drive backwards and then down ramp all the way to the button
-  move_forward(-25, 15);
+  move_forward(-25, 14.5);
   turn_left(90);
-  move_forward(25, 42);
+  move_forward(35, 42);
 }
