@@ -11,7 +11,7 @@ FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
 DigitalEncoder right_encoder(FEHIO::P1_6);
 DigitalEncoder left_encoder(FEHIO::P1_4);
-AnalogInputPin CDS_Sensor(FEHIO::P1_7);
+AnalogInputPin CDS_Sensor(FEHIO::P2_7);
 
 void move_forward(int percent, int inches) //using encoders
 {
@@ -40,7 +40,7 @@ void turn_left(int degree){
 
 
     int percent = 25;
-    int counts = degree * 2.1000000;
+    int counts = degree * 2.08;
     right_motor.SetPercent(-1*(percent));
     left_motor.SetPercent((percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -56,7 +56,7 @@ void turn_right(int degree){
     left_encoder.ResetCounts();
 
     int percent = 25;
-    int counts = degree * 2.1000000;
+    int counts = degree * 2.08;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(-1* (percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -74,40 +74,47 @@ void turn_right(int degree){
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
 
+  while(Color > 2.0)
+  {
+    Color = CDS_Sensor.Value();
+    LCD.WriteLine(CDS_Sensor.Value());
+    move_forward(25, 1);
+  }
 
-  if(Color > 0.9 && Color < 2.0) //Light is blue
+
+  if(Color > 1.1 && Color < 2.0) //Light is blue
   {
   //Go to Blue
   LCD.WriteLine("BLUE");
   turn_left(90);
   move_forward(25, 2.5);
   turn_right(90);
-  move_forward(25, 7.5);
+  move_forward(25, 5);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 6.5);
+  move_forward(-25, 5);
   turn_left(90);
   move_forward(-25, 2.5);
   turn_right(90);
   }
 
-  if(Color < 0.9) //Light is red
+  if(Color < 1.1) //Light is red
   {
   //Go to Red
   LCD.WriteLine("RED");
   turn_right(90);
   move_forward(25, 2.5);
   turn_left(90);
-  move_forward(25, 7.5);
+  move_forward(25, 5);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 6.5);
+  move_forward(-25, 5);
   turn_right(90);
   move_forward(-25, 2.5);
   turn_left(90);
@@ -130,17 +137,17 @@ int main (void)
   //Drive Up Ramp
   turn_right(65);
   move_forward(25, 8); //see function
-  turn_left(22);
-  move_forward(45, 33); //see function
+  turn_left(24);
+  move_forward(45, 31); //see function
   Sleep(2.0); //Wait for counts to stabilize
-  turn_left(90);
-  move_forward(25, 18);
+  turn_left(86);
 
   //Press Humidifer Button
   check_light();
 
   //Drive backwards and then down ramp all the way to the button
-  move_forward(-25, 14.5);
-  turn_left(90);
-  move_forward(35, 42);
+  move_forward(-25, 16);
+  turn_left(85);
+  move_forward(35, 40.5);
+  move_forward(45, 2);
 }
