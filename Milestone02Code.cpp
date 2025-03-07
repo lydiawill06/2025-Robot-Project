@@ -68,52 +68,15 @@ void turn_right(int degree){
 
   void check_light()
   { 
-    //ADD: read line color
-    float Color;
+  //Read line color
+  float Color;
   
-  /* //Find value of CDS cell to determine color
+  //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
 
-  //Go left or right based on color
-  if(Color > Value that means red) //Light is blue
+
+  if(Color > 0.9 && Color < 2.0) //Light is blue
   {
-    //Go to Red
-    LCD.WriteLine("RED");
-    turn_left(90);
-    move_forward(25, 2);
-    turn_right(90);
-    move_forward(25, 8);
-
-    //Sleep for 2 Seconds
-    Sleep(2.0);
-
-    //Go Back to Starting Position
-    move_forward(-25, 8);
-    turn_left(90);
-    move_forward(-25, 2);
-    turn_right(90);
-  }
-
-  
-  if(Color > Value that means red) //Light is blue
-  {
-    //Go to Blue
-    LCD.WriteLine("BLUE");
-    turn_right(90);
-    move_forward(25, 2);
-    turn_left(90);
-    move_forward(25, 8);
-
-    //Sleep for 2 Seconds
-    Sleep(2.0);
-
-    //Go Back to Starting Position
-    move_forward(-25, 8);
-    turn_right(90);
-    move_forward(-25, 2);
-    turn_left(90);
-  }*/
-
   //Go to Blue
   LCD.WriteLine("BLUE");
   turn_left(90);
@@ -129,10 +92,10 @@ void turn_right(int degree){
   turn_left(90);
   move_forward(-25, 2.5);
   turn_right(90);
+  }
 
-
-Sleep(3.0);
-
+  if(Color < 0.9) //Light is red
+  {
   //Go to Red
   LCD.WriteLine("RED");
   turn_right(90);
@@ -148,12 +111,21 @@ Sleep(3.0);
   turn_right(90);
   move_forward(-25, 2.5);
   turn_left(90);
+  }
 }
 
-int main (void) {
-  float x, y;
-  while(!LCD.Touch(&x,&y)); //Wait for screen to be pressed
-  while(LCD.Touch(&x,&y)); //Wait for screen to be unpressed
+int main (void) 
+{
+  //Read line color
+  float Color;
+  
+  //Find value of CDS cell to determine color
+  Color = CDS_Sensor.Value();
+
+  while(Color > 2.0)
+  {
+    Color = CDS_Sensor.Value();
+  }
 
   //Drive Up Ramp
   turn_right(65);
