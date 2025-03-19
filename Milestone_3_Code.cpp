@@ -89,13 +89,18 @@ void PID_Drive(float targetDistance, float maxPower)
 void move_forward(int percent, int inches) //using encoders
 {
     int counts = inches * 33.7408479355;
+
+    //Calculate actual power
+    float actual_percent;
+    actual_percent = (11.5/Battery.Voltage())*percent ;
+
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
     //Set both motors to desired percent
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent);
+    right_motor.SetPercent(-actual_percent);
+    left_motor.SetPercent(-actual_percent);
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
@@ -111,11 +116,14 @@ void turn_left(int degree){
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-
     int percent = 25;
+    //Calculate actual power
+    float actual_percent;
+    actual_percent = (11.5/Battery.Voltage())*percent ;
+
     int counts = degree * 2.08;
-    right_motor.SetPercent(-1*(percent));
-    left_motor.SetPercent((percent));
+    right_motor.SetPercent(-1*(actual_percent));
+    left_motor.SetPercent((actual_percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
     //Turn off motors
@@ -129,9 +137,13 @@ void turn_right(int degree){
     left_encoder.ResetCounts();
 
     int percent = 25;
+    //Calculate actual power
+    float actual_percent;
+    actual_percent = (11.5/Battery.Voltage())*percent ;
+
     int counts = degree * 2.08;
-    right_motor.SetPercent(percent);
-    left_motor.SetPercent(-1* (percent));
+    right_motor.SetPercent(actual_percent);
+    left_motor.SetPercent(-1* (actual_percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
     //Turn off motors
@@ -227,21 +239,25 @@ void window()
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
+    //Calculate actual power
+    float actual_percent;
+    actual_percent = (11.5/Battery.Voltage())*percent ;
+
     //Set both motors to desired percent
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent);
+    right_motor.SetPercent(-actual_percent);
+    left_motor.SetPercent(-actual_percent);
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < (counts*(2/3)));
-    percent = percent+4;
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent-(1.5*percent));
+    actual_percent = actual_percent+4;
+    right_motor.SetPercent(-actual_percent);
+    left_motor.SetPercent(-actual_percent-(1.5*actual_percent));
 
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    percent = percent-6;
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent-10);
+    actual_percent = actual_percent-6;
+    right_motor.SetPercent(-actual_percent);
+    left_motor.SetPercent(-actual_percent-10);
 
 
     //Turn off motors
@@ -254,6 +270,10 @@ void window()
     //Call “move5 forward” for backwards 5 inches. 
 
     percent = 45; 
+    //Calculate actual power
+    float actual_percent;
+    actual_percent = (11.5/Battery.Voltage())*percent ;
+
 
     counts = inches * 33.7408479355;
     //Reset encoder counts
@@ -261,20 +281,20 @@ void window()
     left_encoder.ResetCounts();
 
     //Set both motors to desired percent
-    right_motor.SetPercent(percent);
-    left_motor.SetPercent(percent);
+    right_motor.SetPercent(actual_percent);
+    left_motor.SetPercent(actual_percent);
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < (counts*(2/3)));
-    percent = percent+4;
-    right_motor.SetPercent(percent);
-    left_motor.SetPercent(percent+(percent-10));
+    actual_percent = actual_percent+4;
+    right_motor.SetPercent(actual_percent);
+    left_motor.SetPercent(actual_percent+(actual_percent-10));
 
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    percent = percent-6;
-    right_motor.SetPercent(percent);
-    left_motor.SetPercent(percent+10);
+    actual_percent = actual_percent-6;
+    right_motor.SetPercent(actual_percent);
+    left_motor.SetPercent(actual_percent+10);
 
     //Turn off motors
     right_motor.Stop();
