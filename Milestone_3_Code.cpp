@@ -257,7 +257,7 @@ void window()
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
     actual_percent = actual_percent-4;
     right_motor.SetPercent(-actual_percent);
-    left_motor.SetPercent(-actual_percent-10);
+    left_motor.SetPercent(-actual_percent-5);
 
 
     //Turn off motors
@@ -265,8 +265,7 @@ void window()
     left_motor.Stop();
     Sleep(2.0);
 
-    turn_left(10);
-    move_forward(25,1);
+    //turn_left(5);
   
     //Call “move5 forward” for backwards 5 inches. 
     inches = 6;
@@ -289,7 +288,7 @@ void window()
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < (counts*(2/3)));
     actual_percent = actual_percent+2;
     right_motor.SetPercent(actual_percent);
-    left_motor.SetPercent(actual_percent+((1/3)*actual_percent));
+    left_motor.SetPercent(actual_percent+(actual_percent));
 
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
     actual_percent = actual_percent-4;
@@ -330,13 +329,14 @@ turn_left(24);
 move_forward(45, 27.5); //see function
 Sleep(2.0); //Wait for counts to stabilize
 turn_left(83);
-move_forward(25, 14); //see function
+move_forward(25, 13); //see function
+Sleep(2.0);
+
+turn_right(30);
+move_forward(-25,2);
 Sleep(2.0);
 turn_left(30);
 move_forward(25,2);
-Sleep(2.0);
-turn_right(35);
-move_forward(-25,2);
 Sleep(2.0);
 
 window();
