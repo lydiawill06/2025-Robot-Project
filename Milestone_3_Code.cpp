@@ -332,12 +332,12 @@ turn_left(83);
 move_forward(25, 13); //see function
 Sleep(2.0);
 
-turn_right(30);
-move_forward(-25,2);
-Sleep(2.0);
 turn_left(30);
-move_forward(25,2);
-Sleep(2.0);
+ move_forward(25,2);
+ Sleep(2.0);
+ turn_right(35);
+ move_forward(-25,2);
+ Sleep(2.0);
 
 window();
 
