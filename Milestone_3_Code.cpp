@@ -11,7 +11,7 @@ FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
 DigitalEncoder right_encoder(FEHIO::P1_6);
 DigitalEncoder left_encoder(FEHIO::P1_4);
-AnalogInputPin CDS_Sensor(FEHIO::P2_7);
+AnalogInputPin CDS_Sensor(FEHIO::P2_1);
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -231,8 +231,8 @@ void window()
     move_forward(-25,1.5);
     Sleep(2.0);
     */
-    int inches = 7;
-    int percent = 45;
+    int inches = 5.5;
+    int percent = 30;
     //Call the “move forward” function for 5 inches. 
     int counts = inches * 33.7408479355;
     //Reset encoder counts
@@ -250,12 +250,12 @@ void window()
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < (counts*(2/3)));
-    actual_percent = actual_percent+4;
+    actual_percent = actual_percent+2;
     right_motor.SetPercent(-actual_percent);
-    left_motor.SetPercent(-actual_percent-(1.5*actual_percent));
+    left_motor.SetPercent(-actual_percent-(actual_percent));
 
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    actual_percent = actual_percent-6;
+    actual_percent = actual_percent-4;
     right_motor.SetPercent(-actual_percent);
     left_motor.SetPercent(-actual_percent-10);
 
@@ -265,15 +265,15 @@ void window()
     left_motor.Stop();
     Sleep(2.0);
 
-    
+    turn_left(10);
+    move_forward(25,1);
   
     //Call “move5 forward” for backwards 5 inches. 
+    inches = 6;
 
-    percent = 45; 
+    percent = 30; 
     //Calculate actual power
-    float actual_percent;
     actual_percent = (11.5/Battery.Voltage())*percent ;
-
 
     counts = inches * 33.7408479355;
     //Reset encoder counts
@@ -287,14 +287,14 @@ void window()
     //While the average of the left and right encoder is less than counts,
     //keep running motors
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < (counts*(2/3)));
-    actual_percent = actual_percent+4;
+    actual_percent = actual_percent+2;
     right_motor.SetPercent(actual_percent);
-    left_motor.SetPercent(actual_percent+(actual_percent-10));
+    left_motor.SetPercent(actual_percent+((1/3)*actual_percent));
 
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    actual_percent = actual_percent-6;
+    actual_percent = actual_percent-4;
     right_motor.SetPercent(actual_percent);
-    left_motor.SetPercent(actual_percent+10);
+    left_motor.SetPercent(actual_percent+5);
 
     //Turn off motors
     right_motor.Stop();
@@ -304,17 +304,41 @@ void window()
 
 int main (void) 
 {
-  //Read line color
-  float Color;
+//Read line color
+float Color;
   
-  //Find value of CDS cell to determine color
-  //Color = CDS_Sensor.Value();
+//Find value of CDS cell to determine color
+Color = CDS_Sensor.Value();
 
-  //while(Color > 2.0)
-  //  {
-  //  Color = CDS_Sensor.Value();
-  //}
+while(Color > 2.0)
+{
+  Color = CDS_Sensor.Value();
+}
 
-  window();
+//Drive Up Ramp
+/*turn_right(65);
+PID_Drive(8, 40); //see function
+turn_left(24);
+PID_Drive(26, 50); //see function
+Sleep(2.0); //Wait for counts to stabilize
+turn_left(86);*/
+
+//Drive Up Ramp
+turn_right(65);
+move_forward(25, 8); //see function
+turn_left(24);
+move_forward(45, 27.5); //see function
+Sleep(2.0); //Wait for counts to stabilize
+turn_left(83);
+move_forward(25, 14); //see function
+Sleep(2.0);
+turn_left(30);
+move_forward(25,2);
+Sleep(2.0);
+turn_right(35);
+move_forward(-25,2);
+Sleep(2.0);
+
+window();
 
 }
