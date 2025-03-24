@@ -5,12 +5,12 @@
 #include <FEHBattery.h>
 
 // Can change the following if one motor is slower than another.
-#define LEFT_MOTOR_CORRECTION_FACTOR 1
+#define LEFT_MOTOR_CORRECTION_FACTOR -1
 #define RIGHT_MOTOR_CORRECTION_FACTOR 1
 
 // Set a motor percentage of no more than 50% power
 #define MOTOR_PERCENTAGE (11.5/Battery.Voltage()) * 25;
-#define ONE_DEGREE_COUNTS 2.47333333
+#define ONE_DEGREE_COUNTS 2.43
 
 FEHMotor left_motor(FEHMotor::Motor1, 9.0);
 FEHMotor right_motor(FEHMotor::Motor2, 9.0);
@@ -32,25 +32,39 @@ void driveUntilSensorDetected()
     right_motor.Stop();
 }
 
-void turn(float degree)
-{
-    int counts = ONE_DEGREE_COUNTS * degree;
-    if (degree<0){
-        //turn right
-        counts = counts * -1;
-        right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
-        left_motor.SetPercent(1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
-        while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    } 
-    
+void turn_left(int degree){
+  //Reset Counts
+  right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
+  
+  int counts = ONE_DEGREE_COUNTS * degree;
 
-    if (degree>0){
-        //turn left
-        right_motor.SetPercent(-1 * (RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
-        left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
-        while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-    }
+  right_motor.SetPercent(-1 * (RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+  left_motor.SetPercent(-1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+  
+
+  //Turn off motors
+  right_motor.Stop();
+  left_motor.Stop();
 }
+
+void turn_right(int degree){
+  //Reset Counts
+  right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
+
+  int counts = ONE_DEGREE_COUNTS * degree;
+
+  right_motor.SetPercent((RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+  left_motor.SetPercent(1 * (LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25));
+  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+  //Turn off motors
+  right_motor.Stop();
+  left_motor.Stop();
+} 
+
 
 void drive(float distance)
 {
@@ -62,8 +76,8 @@ void drive(float distance)
      left_encoder.ResetCounts();
  
      //Set both motors to desired percent
-     right_motor.SetPercent(RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
-     left_motor.SetPercent(LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
+    left_motor.SetPercent(-1 * LEFT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
+    right_motor.SetPercent(1 * RIGHT_MOTOR_CORRECTION_FACTOR * (11.5/Battery.Voltage()) * 25);
  
      //While the average of the left and right encoder is less than counts,
      //keep running motors
@@ -80,17 +94,14 @@ int main(void)
     driveUntilSensorDetected(); 
 
     // Move forward a little bit for the Crayola bot to have some space to turn
-    drive(1);
-    turn(-90);
-
     drive(3);
+    turn_left(90);
+
 
     /* TODO: Complete the rest of the maze navigation */
     driveUntilSensorDetected(); 
-    drive(1);
-    turn(90);
     drive(3);
+    turn_right(100);
 
     driveUntilSensorDetected(); 
 }
-
