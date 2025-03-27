@@ -16,7 +16,7 @@ AnalogInputPin CDS_Sensor(FEHIO::P2_7);
 FEHServo Arm_Servo(FEHServo::Servo0);
 
 const float COUNTS_PER_INCH = 33.7408479355;
-const float COLLISION_TIMEOUT = 1.0; // Time in seconds to continue driving after detecting collision
+const float COLLISION_TIMEOUT = 0.5; // Time in seconds to continue driving after detecting collision
 
 void move_forward(int percent, int inches) {
     int counts = inches * COUNTS_PER_INCH;
