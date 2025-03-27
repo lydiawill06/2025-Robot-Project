@@ -300,12 +300,12 @@ void appleBucketPickup(){
   Arm_Servo.SetMax(2410);
   Arm_Servo.SetDegree(133);
   Sleep(0.5);
-  move_forward(25,6);
+  move_forward(35,6);
   Arm_Servo.SetDegree(134);
-  move_forward(25,0.5);
+  move_forward(35,0.5);
 
   Arm_Servo.SetDegree(135);
-  move_forward(25,0.5);
+  move_forward(35,0.5);
 
   move_arm(128, 28);
 
@@ -317,17 +317,17 @@ void placeAppleBucket(){
 
   move_arm(38, 100);
   
-  move_forward(-25,2.5);
-  move_forward(25,1);
+  move_forward(-35,2.5);
+  move_forward(35,1);
 
   Arm_Servo.SetDegree(110);
   Sleep(0.5);
   
-  move_forward(-25,6);
+  move_forward(-35,6);
   Arm_Servo.SetDegree(115);
 
-  move_forward(25,5);
-  move_forward(-25, 5);
+  move_forward(35,5);
+  move_forward(-35, 5);
 }
 
 int main (void) 
@@ -348,25 +348,25 @@ int main (void)
   }
   
 //go to apple bucket line
-  PID_Drive(25,17);
-  turn_left(43);
+  PID_Drive(45,16.5);
+  turn_left(45);
 
   //pick up apple bucket
   appleBucketPickup();
 
   //drive to front of ramp & line up
-  PID_Drive(-25,10);
+  PID_Drive(-45,10);
   turn_right(90);
-  move_forward(-25, 3);
+  move_forward(-45, 3);
   turn_right(90);
-  PID_Drive(25,12.5);
-  turn_left(95);
+  PID_Drive(45,12.5);
+  turn_left(96);
 
   //go up ramp and to table
   PID_Drive(55,25);
   //turn_left(10);
-  PID_Drive(25,12.5);
-  turn_right(10);
+  PID_Drive(45,12.5);
+  turn_right(7);
 
   //put the apple bucket down
   placeAppleBucket();
