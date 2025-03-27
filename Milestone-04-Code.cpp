@@ -43,12 +43,12 @@ float PID_Control(float targetCounts, int currentCounts, float lastError, float 
     float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
     power = LimitPower(power, maxPower); // Limit power
 
-    LCD.WriteLine("Integral Error: ");
-    LCD.WriteLine(integral);
-    LCD.WriteLine("Derivative Error:");
-    LCD.WriteLine(derivative);
-    LCD.WriteLine("Proportional Error:");
-    LCD.WriteLine(error);
+    //LCD.WriteLine("Integral Error: ");
+    //LCD.WriteLine(integral);
+    //LCD.WriteLine("Derivative Error:");
+    //LCD.WriteLine(derivative);
+    //LCD.WriteLine("Proportional Error:");
+    //LCD.WriteLine(error);
 
     return power;
 }
@@ -101,10 +101,21 @@ void move_forward(int percent, int inches) //using encoders
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    int quit = 0;
+    int quit = 0, checks = 0;
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
-      //int current_count = left_encoder.Counts();
-      //int old_encoder_count = left_encoder.Counts();
+      
+      //should quit out if stuck, not yet tested
+      checks++;
+      int current_count = left_encoder.Counts();
+      int old_encoder_count = 0;
+      if (checks%30 == 0){
+      int old_encoder_count = left_encoder.Counts();
+      }
+      if (checks%45 == 0){
+        if (old_encoder_count == current_count){
+          return;
+        }
+      }
     };
 
     //Turn off motors
@@ -269,9 +280,52 @@ void window()
 
 }
 
+void move_arm(int start, int degree){
+  while (start < degree){
+    Arm_Servo.SetDegree(start);
+    start += 1;
+    Sleep(0.1);
+  }
+  while (start > degree){
+    Arm_Servo.SetDegree(start);
+    start -= 1;
+    (0.1);
+  }
+}
+
+void appleBucketPickup(){
+  Arm_Servo.SetDegree(145);
+  Sleep(0.5);
+  move_forward(25,6);
+  Arm_Servo.SetDegree(146);
+  move_forward(25,0.5);
+
+  Arm_Servo.SetDegree(147);
+  move_forward(25,0.5);
+
+  move_arm(140, 40);
+
+}
+
+void placeAppleBucket(){
+  move_arm(50, 110);
+  
+  move_forward(-25,2.5);
+  move_forward(25,1);
+  Arm_Servo.SetDegree(120);
+  Sleep(0.5);
+  
+  move_forward(-25,6);
+  Arm_Servo.SetDegree(130);
+  move_forward(25,5);
+  move_forward(-25, 5);
+}
+
 int main (void) 
 {
 
+  Arm_Servo.SetMin(863);
+  Arm_Servo.SetMax(2410);
     //Read line color
   float Color;
   
@@ -282,76 +336,29 @@ int main (void)
     {
     Color = CDS_Sensor.Value();
   }
-    Arm_Servo.SetMin(863);
-    Arm_Servo.SetMax(2410);
-PID_Drive(25,17);
-turn_left(47);
-Arm_Servo.SetDegree(145);
-Sleep(1.0);
-move_forward(25,6);
-Sleep(0.5);
-Arm_Servo.SetDegree(146);
-move_forward(25,0.5);
-Sleep(0.5);
+//go to apple bucket line
+  PID_Drive(25,17);
+  turn_left(47);
 
-Arm_Servo.SetDegree(147);
-move_forward(25,0.5);
-Sleep(0.5);
+  //pick up apple bucket
+  appleBucketPickup();
 
-Arm_Servo.SetDegree(120);
-Sleep(0.5);
-Arm_Servo.SetDegree(110);
-Sleep(0.5);
-Arm_Servo.SetDegree(100);
-Sleep(0.5);
+  //drive to front of ramp & line up
+  PID_Drive(-25,10);
+  turn_right(90);
+  move_forward(-25, 3);
+  turn_right(90);
+  PID_Drive(25,12.5);
+  turn_left(100);
 
-Arm_Servo.SetDegree(90);
-Sleep(0.5);
-Arm_Servo.SetDegree(80);
-Sleep(0.5);
-Arm_Servo.SetDegree(70);
-Sleep(0.5);
-Arm_Servo.SetDegree(60);
-Sleep(0.5);
-Arm_Servo.SetDegree(50);
-Sleep(0.5);
-Arm_Servo.SetDegree(40);
-Sleep(0.5);
+  //go up ramp and to table
+  PID_Drive(55,25);
+  //turn_left(10);
+  PID_Drive(25,12);
+  turn_right(10);
 
-PID_Drive(-25,10);
-turn_right(90);
-move_forward(-25, 3);
-turn_right(90);
-PID_Drive(25,12.5);
-turn_left(100);
-PID_Drive(55,25);
-//turn_left(10);
-PID_Drive(25,12);
-turn_right(10);
-
-Arm_Servo.SetDegree(50);
-Sleep(0.5);
-Arm_Servo.SetDegree(60);
-Sleep(0.5);
-Arm_Servo.SetDegree(70);
-Sleep(0.5);
-Arm_Servo.SetDegree(80);
-Sleep(0.5);
-Arm_Servo.SetDegree(90);
-Sleep(0.5);
-Arm_Servo.SetDegree(100);
-Sleep(0.5);
-Arm_Servo.SetDegree(110);
-Sleep(0.5);
-move_forward(-25,2.5);
-move_forward(25,1);
-Arm_Servo.SetDegree(120);
-Sleep(0.5);
-
-move_forward(-25,6);
-Arm_Servo.SetDegree(130);
-move_forward(25,5);
-move_forward(-25, 5);
+  //put the apple bucket down
+  placeAppleBucket();
   
  
     
