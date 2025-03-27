@@ -104,18 +104,18 @@ void move_forward(int percent, int inches) //using encoders
     int quit = 0, checks = 0;
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
       
-      //should quit out if stuck, not yet tested
+      /*should quit out if stuck, not yet tested
       checks++;
       int current_count = left_encoder.Counts();
       int old_encoder_count = 0;
-      if (checks%30 == 0){
+      if (checks%21 == 0){
       int old_encoder_count = left_encoder.Counts();
       }
-      if (checks%45 == 0){
+      if (checks%43 == 0){
         if (old_encoder_count == current_count){
           return;
         }
-      }
+      }*/
     };
 
     //Turn off motors
@@ -129,8 +129,8 @@ void turn_left(int degree){
     left_encoder.ResetCounts();
 
 
-    int percent = 25;
-    int counts = degree * 2.08;
+    int percent = 40;
+    int counts = degree * 1.92857142857;
     right_motor.SetPercent(-1*(percent));
     left_motor.SetPercent((percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -145,8 +145,8 @@ void turn_right(int degree){
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    int percent = 25;
-    int counts = degree * 2.08;
+    int percent = 40;
+    int counts = degree * 1.92857142857;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(-1* (percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -281,48 +281,58 @@ void window()
 }
 
 void move_arm(int start, int degree){
+  Arm_Servo.SetMin(863);
+  Arm_Servo.SetMax(2410);
   while (start < degree){
     Arm_Servo.SetDegree(start);
     start += 1;
-    Sleep(0.1);
+    Sleep(0.005);
   }
   while (start > degree){
     Arm_Servo.SetDegree(start);
     start -= 1;
-    (0.1);
+    Sleep(0.005);
   }
 }
 
 void appleBucketPickup(){
-  Arm_Servo.SetDegree(145);
+  Arm_Servo.SetMin(863);
+  Arm_Servo.SetMax(2410);
+  Arm_Servo.SetDegree(133);
   Sleep(0.5);
   move_forward(25,6);
-  Arm_Servo.SetDegree(146);
+  Arm_Servo.SetDegree(134);
   move_forward(25,0.5);
 
-  Arm_Servo.SetDegree(147);
+  Arm_Servo.SetDegree(135);
   move_forward(25,0.5);
 
-  move_arm(140, 40);
+  move_arm(128, 28);
 
 }
 
 void placeAppleBucket(){
-  move_arm(50, 110);
+  Arm_Servo.SetMin(863);
+  Arm_Servo.SetMax(2410);
+
+  move_arm(38, 100);
   
   move_forward(-25,2.5);
   move_forward(25,1);
-  Arm_Servo.SetDegree(120);
+
+  Arm_Servo.SetDegree(110);
   Sleep(0.5);
   
   move_forward(-25,6);
-  Arm_Servo.SetDegree(130);
+  Arm_Servo.SetDegree(115);
+
   move_forward(25,5);
   move_forward(-25, 5);
 }
 
 int main (void) 
 {
+
 
   Arm_Servo.SetMin(863);
   Arm_Servo.SetMax(2410);
@@ -336,9 +346,10 @@ int main (void)
     {
     Color = CDS_Sensor.Value();
   }
+  
 //go to apple bucket line
   PID_Drive(25,17);
-  turn_left(47);
+  turn_left(43);
 
   //pick up apple bucket
   appleBucketPickup();
@@ -349,22 +360,16 @@ int main (void)
   move_forward(-25, 3);
   turn_right(90);
   PID_Drive(25,12.5);
-  turn_left(100);
+  turn_left(95);
 
   //go up ramp and to table
   PID_Drive(55,25);
   //turn_left(10);
-  PID_Drive(25,12);
+  PID_Drive(25,12.5);
   turn_right(10);
 
   //put the apple bucket down
   placeAppleBucket();
+
   
- 
-    
-
-    
-
-    
-    
 }
