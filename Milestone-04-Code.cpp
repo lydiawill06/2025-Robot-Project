@@ -7,6 +7,7 @@
 #include <FEHMotor.h>
 #include <FEHServo.h>
 #include <Arduino.h>
+#include <FEH.h>
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
