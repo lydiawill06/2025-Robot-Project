@@ -1,0 +1,56 @@
+#include <FEHLCD.h>
+#include <FEHIO.h>
+#include <FEHUtility.h>
+#include <FEHMotor.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <FEHMotor.h>
+#include <FEHBattery.h>
+#include <FEHServo.h>
+
+FEHMotor left_motor(FEHMotor::Motor2, 9.0);
+FEHMotor right_motor(FEHMotor::Motor1, 9.0);
+DigitalEncoder right_encoder(FEHIO::P1_6);
+DigitalEncoder left_encoder(FEHIO::P1_4);
+AnalogInputPin CDS_Sensor(FEHIO::P2_7);
+FEHServo Arm_Servo(FEHServo::Servo0);
+
+const float COUNTS_PER_INCH = 33.7408479355;
+const float COLLISION_TIMEOUT = 1.0; // Time in seconds to continue driving after detecting collision
+
+void move_forward(int percent, int inches) {
+    int counts = inches * COUNTS_PER_INCH;
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    right_motor.SetPercent(-percent);
+    left_motor.SetPercent(-percent);
+
+    int lastLeftCounts = 0, lastRightCounts = 0;
+    float elapsedTime = 0;
+
+    while ((left_encoder.Counts() + right_encoder.Counts()) / 2.0 < counts) {
+        int currentLeftCounts = left_encoder.Counts();
+        int currentRightCounts = right_encoder.Counts();
+
+        if (currentLeftCounts == lastLeftCounts && currentRightCounts == lastRightCounts) {
+            // If encoders are not changing, start a timer
+            float startTime = TimeNow();
+            while (TimeNow() - startTime < COLLISION_TIMEOUT) {
+                right_motor.SetPercent(-percent);
+                left_motor.SetPercent(-percent);
+            }
+            break;
+        }
+
+        lastLeftCounts = currentLeftCounts;
+        lastRightCounts = currentRightCounts;
+    }
+
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+int main() {
+    move_forward(25, 10); // Example call
+}
