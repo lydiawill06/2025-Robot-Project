@@ -317,10 +317,10 @@ void placeAppleBucket(){
 
   move_arm(38, 100);
   
-  move_forward(-35,2.5);
-  move_forward(35,1);
+  move_forward(-25,2.5);
+  move_forward(40,2);
 
-  Arm_Servo.SetDegree(110);
+  Arm_Servo.SetDegree(112);
   Sleep(0.5);
   
   move_forward(-35,6);
@@ -349,7 +349,7 @@ int main (void)
   
 //go to apple bucket line
   PID_Drive(45,16.5);
-  turn_left(45);
+  turn_left(48);
 
   //pick up apple bucket
   appleBucketPickup();
@@ -359,14 +359,14 @@ int main (void)
   turn_right(90);
   move_forward(-45, 3);
   turn_right(90);
-  PID_Drive(45,12.5);
+  PID_Drive(45,12);
   turn_left(96);
 
   //go up ramp and to table
-  PID_Drive(55,25);
-  //turn_left(10);
-  PID_Drive(45,12.5);
-  turn_right(7);
+  PID_Drive(55,23);
+  turn_left(10);
+  PID_Drive(45,13);
+  turn_right(10);
 
   //put the apple bucket down
   placeAppleBucket();
