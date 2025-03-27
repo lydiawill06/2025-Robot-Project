@@ -1,4 +1,3 @@
-
 #include <FEHLCD.h>
 #include <FEHIO.h>
 #include <FEHUtility.h>
@@ -6,15 +5,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <FEHMotor.h>
-#include <FEHBattery.h>
 #include <FEHServo.h>
-#include <FEHRCS.h>
+#include <Arduino.h>
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
-DigitalEncoder right_encoder(FEHIO::P1_6);
-DigitalEncoder left_encoder(FEHIO::P1_4);
-AnalogInputPin CDS_Sensor(FEHIO::P2_7);
+DigitalEncoder right_encoder(FEHIO::Pin6);
+DigitalEncoder left_encoder(FEHIO::Pin4);
+AnalogInputPin CDS_Sensor(FEHIO::Pin7);
 FEHServo Arm_Servo(FEHServo::Servo0);
 
 // PID Constants (To be tuned)
@@ -332,88 +330,42 @@ void placeAppleBucket(){
   move_forward(-35, 5);
 }
 
-void move_to_lever (int lever){
-  if (lever==0){
-    turn_left(90);
-    move_forward(25, 4);
-    turn_right(90);
-  } else if (lever==2){
-    turn_right(90);
-    move_forward(25, 4);
-    turn_right(90);
-  }
-}
-
-  
-
-void flip_lever(){ 
-  move_forward(25, 6);
-  move_arm(90, 140);
-  move_forward(-25, 4);
-  Arm_Servo.SetDegree(170);
-  move_forward(25, 5);
-  move_arm(170, 130);
-}
-int main (void) 
+void ERCMain()
 {
-
-  RCS.InitializeTouchMenu("1240E5WFU"); // Run Menu to select Region (e.g., A, B, C, D)
-
-  Arm_Servo.SetMin(863);
-  Arm_Servo.SetMax(2410);
-    //Read line color
-  float Color;
-  
-  //Find value of CDS cell to determine color
-  Color = CDS_Sensor.Value();
-
-  while(Color > 2.0)
-    {
+    Arm_Servo.SetMin(863);
+    Arm_Servo.SetMax(2410);
+      //Read line color
+    float Color;
+    
+    //Find value of CDS cell to determine color
     Color = CDS_Sensor.Value();
-  }
   
-//go to apple bucket line
-  PID_Drive(45,16.5);
-  turn_left(48);
-
-  //pick up apple bucket
-  appleBucketPickup();
-
-  //drive to front of ramp & line up
-  PID_Drive(-45,10);
-  turn_right(90);
-  move_forward(-45, 3);
-  turn_right(90);
-  PID_Drive(45,12);
-  turn_left(97);
-
-  //go up ramp and to table
-  PID_Drive(55,23);
-  turn_left(10);
-  PID_Drive(45,13);
-  turn_right(20);
-
-  //put the apple bucket down
-  placeAppleBucket();
-
-  //run to middle from table
-
-  //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
-
-  //move_to_lever(lever);
-
-/*
-Arm_Servo.SetDegree(100);
-//move_forward(25, 5);
-Sleep(2.0);
-Arm_Servo.SetDegree(145);
-
-//move_forward(-25, 5);
-Arm_Servo.SetDegree(170);
-//move_forward(25, 5);
-Sleep(2.0);
-Arm_Servo.SetDegree(140);
-*/
-
+    while(Color > 2.0)
+      {
+      Color = CDS_Sensor.Value();
+    }
+    
+  //go to apple bucket line
+    PID_Drive(45,16.5);
+    turn_left(48);
   
+    //pick up apple bucket
+    appleBucketPickup();
+  
+    //drive to front of ramp & line up
+    PID_Drive(-45,10);
+    turn_right(90);
+    move_forward(-45, 3);
+    turn_right(90);
+    PID_Drive(45,12);
+    turn_left(97);
+  
+    //go up ramp and to table
+    PID_Drive(55,23);
+    turn_left(10);
+    PID_Drive(45,13);
+    turn_right(20);
+  
+    //put the apple bucket down
+    placeAppleBucket();
 }
