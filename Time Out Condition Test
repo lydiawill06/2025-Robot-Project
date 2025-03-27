@@ -58,3 +58,9 @@ void move_forward(int percent, int inches) {
     right_motor.Stop();
     left_motor.Stop();
 }
+
+int main() 
+{
+    move_forward(25, 10); // Example call
+}
+
