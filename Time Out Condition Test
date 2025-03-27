@@ -35,24 +35,25 @@ void move_forward(int percent, int inches) {
         int currentRightCounts = right_encoder.Counts();
 
         if (currentLeftCounts == lastLeftCounts && currentRightCounts == lastRightCounts) {
-            // Only start the timer if it hasn't been started
+            // Start stall timer only if it hasn't started yet
             if (stallStartTime == 0) {
                 stallStartTime = TimeNow();
             }
-            // If the stall persists for COLLISION_TIMEOUT, continue for 0.5s then stop
-            if (TimeNow() - stallStartTime >= COLLISION_TIMEOUT) {
+            // If stalled for 0.5s, drive for 0.5s more and then stop
+            if (TimeNow() - stallStartTime >= 0.5) {
                 right_motor.SetPercent(-percent);
                 left_motor.SetPercent(-percent);
                 Sleep(0.5);
-                break;
+                break;  // Stop movement after extra 0.5s drive
             }
         } else {
-            // Reset stall timer if movement resumes
+            // Reset stall timer only when movement resumes
             stallStartTime = 0;
         }
 
         lastLeftCounts = currentLeftCounts;
         lastRightCounts = currentRightCounts;
+        Sleep(10);  // Small delay to avoid excessive CPU usage
     }
 
     right_motor.Stop();
@@ -63,4 +64,3 @@ int main()
 {
     move_forward(25, 10); // Example call
 }
-
