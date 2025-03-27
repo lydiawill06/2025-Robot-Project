@@ -1,3 +1,4 @@
+
 #include <FEHLCD.h>
 #include <FEHIO.h>
 #include <FEHUtility.h>
@@ -360,13 +361,13 @@ int main (void)
   move_forward(-45, 3);
   turn_right(90);
   PID_Drive(45,12);
-  turn_left(96);
+  turn_left(97);
 
   //go up ramp and to table
   PID_Drive(55,23);
   turn_left(10);
   PID_Drive(45,13);
-  turn_right(10);
+  turn_right(20);
 
   //put the apple bucket down
   placeAppleBucket();
