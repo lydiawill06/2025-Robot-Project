@@ -15,50 +15,113 @@ DigitalEncoder left_encoder(FEHIO::P1_4);
 AnalogInputPin CDS_Sensor(FEHIO::P2_7);
 FEHServo Arm_Servo(FEHServo::Servo0);
 
-const float COUNTS_PER_INCH = 33.7408479355;
-const float COLLISION_TIMEOUT = 0.5; // Time in seconds to continue driving after detecting collision
+// PID Constants (To be tuned)
+float Kp = 0.385;  // Proportional gain
+float Ki = 0.0025;  // Integral gain   0.01
+float Kd = 0.150;  // Derivative gain  0.2
 
-void move_forward(int percent, int inches) {
+// Conversion factor for encoder counts to inches
+const float COUNTS_PER_INCH = 33.7408479355;  // ≈ 33.76
+
+// Function to limit power within a given range
+float LimitPower(float power, float maxPower) 
+{
+    if (power > maxPower) return maxPower;
+    if (power < -maxPower) return -maxPower;
+    return power;
+}
+
+//PID control for individual motor
+float PID_Control(float targetCounts, int currentCounts, float lastError, float &integral, float maxPower, float &derivative) {
+    float error = targetCounts - currentCounts;
+    integral += error;
+    derivative = error - lastError;
+
+    // Compute PID power
+    float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
+    power = LimitPower(power, maxPower); // Limit power
+
+    return power;
+}
+
+// PID driving function (each motor independently controlled)
+void PID_Drive(float maxPower, float targetDistance) 
+{
+    float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
+    float leftDerivative = 0, rightDerivative = 0;
+    int leftCounts = 0, rightCounts = 0;
+    float targetCounts = targetDistance * COUNTS_PER_INCH;
+
+    // Reset encoders
+    left_encoder.ResetCounts();
+    right_encoder.ResetCounts();
+
+    int lastLeftCounts = left_encoder.Counts();
+    int lastRightCounts = right_encoder.Counts();
+
+    while ((leftCounts + rightCounts) / 2.0 < targetCounts) 
+    {
+        leftCounts = left_encoder.Counts();
+        rightCounts = right_encoder.Counts();
+
+        // Stop immediately if both encoders stop counting
+        if (leftCounts == lastLeftCounts && rightCounts == lastRightCounts) {
+            break;
+        }
+
+        float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
+        float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+
+        left_motor.SetPercent(-leftPower);
+        right_motor.SetPercent(-rightPower);
+
+        // Update last error outside of PID function
+        leftError = targetCounts - leftCounts;
+        rightError = targetCounts - rightCounts;
+
+        lastLeftCounts = leftCounts;
+        lastRightCounts = rightCounts;
+
+        Sleep(10);  // Small delay for stability
+    }
+
+    // Stop motors
+    left_motor.Stop();
+    right_motor.Stop();
+}
+
+void move_forward(int percent, int inches) //using encoders
+{
     int counts = inches * COUNTS_PER_INCH;
+    //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
+    //Set both motors to desired percent
     right_motor.SetPercent(-percent);
     left_motor.SetPercent(-percent);
 
     int lastLeftCounts = left_encoder.Counts();
     int lastRightCounts = right_encoder.Counts();
-    float stallStartTime = 0;  // Timer for collision detection
 
-    while ((left_encoder.Counts() + right_encoder.Counts()) / 2.0 < counts) {
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
         int currentLeftCounts = left_encoder.Counts();
         int currentRightCounts = right_encoder.Counts();
 
+        // Stop immediately if both encoders stop counting
         if (currentLeftCounts == lastLeftCounts && currentRightCounts == lastRightCounts) {
-            // Start stall timer only if it hasn't started yet
-            if (stallStartTime == 0) {
-                stallStartTime = TimeNow();
-            }
-            // If stalled for 0.5s, drive for 0.5s more and then stop
-            if (TimeNow() - stallStartTime >= 0.5) {
-                right_motor.SetPercent(-percent);
-                left_motor.SetPercent(-percent);
-                Sleep(0.5);
-                break;  // Stop movement after extra 0.5s drive
-            }
-        } else {
-            // Reset stall timer only when movement resumes
-            stallStartTime = 0;
+            break;
         }
 
         lastLeftCounts = currentLeftCounts;
         lastRightCounts = currentRightCounts;
-        Sleep(10);  // Small delay to avoid excessive CPU usage
     }
 
+    //Turn off motors
     right_motor.Stop();
     left_motor.Stop();
 }
+
 
 int main() 
 {
