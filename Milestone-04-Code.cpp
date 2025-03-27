@@ -8,6 +8,7 @@
 #include <FEHMotor.h>
 #include <FEHBattery.h>
 #include <FEHServo.h>
+#include <FEHRCS.h>
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
@@ -331,9 +332,32 @@ void placeAppleBucket(){
   move_forward(-35, 5);
 }
 
+void move_to_lever (int lever){
+  if (lever==0){
+    turn_left(90);
+    move_forward(25, 4);
+    turn_right(90);
+  } else if (lever==2){
+    turn_right(90);
+    move_forward(25, 4);
+    turn_right(90);
+  }
+}
+
+  
+
+void flip_lever(){ 
+  move_forward(25, 6);
+  move_arm(90, 140);
+  move_forward(-25, 4);
+  Arm_Servo.SetDegree(170);
+  move_forward(25, 5);
+  move_arm(170, 130);
+}
 int main (void) 
 {
 
+  RCS.InitializeTouchMenu("1240E5WFU"); // Run Menu to select Region (e.g., A, B, C, D)
 
   Arm_Servo.SetMin(863);
   Arm_Servo.SetMax(2410);
@@ -371,6 +395,25 @@ int main (void)
 
   //put the apple bucket down
   placeAppleBucket();
+
+  //run to middle from table
+
+  //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+
+  //move_to_lever(lever);
+
+/*
+Arm_Servo.SetDegree(100);
+//move_forward(25, 5);
+Sleep(2.0);
+Arm_Servo.SetDegree(145);
+
+//move_forward(-25, 5);
+Arm_Servo.SetDegree(170);
+//move_forward(25, 5);
+Sleep(2.0);
+Arm_Servo.SetDegree(140);
+*/
 
   
 }
