@@ -1,3 +1,4 @@
+
 #include <FEHLCD.h>
 #include <FEHIO.h>
 #include <FEHUtility.h>
@@ -5,15 +6,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <FEHMotor.h>
+#include <FEHBattery.h>
 #include <FEHServo.h>
-#include <Arduino.h>
-#include <FEH.h>
+#include <FEHRCS.h>
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
-DigitalEncoder right_encoder(FEHIO::Pin6);
-DigitalEncoder left_encoder(FEHIO::Pin4);
-AnalogInputPin CDS_Sensor(FEHIO::Pin7);
+DigitalEncoder right_encoder(FEHIO::P1_6);
+DigitalEncoder left_encoder(FEHIO::P1_4);
+AnalogInputPin CDS_Sensor(FEHIO::P2_7);
 FEHServo Arm_Servo(FEHServo::Servo0);
 
 // PID Constants (To be tuned)
@@ -282,8 +283,7 @@ void window()
 }
 
 void move_arm(int start, int degree){
-  Arm_Servo.SetMin(863);
-  Arm_Servo.SetMax(2410);
+
   while (start < degree){
     Arm_Servo.SetDegree(start);
     start += 1;
@@ -297,76 +297,127 @@ void move_arm(int start, int degree){
 }
 
 void appleBucketPickup(){
-  Arm_Servo.SetMin(863);
-  Arm_Servo.SetMax(2410);
-  Arm_Servo.SetDegree(133);
+
+  Arm_Servo.SetDegree(142);
   Sleep(0.5);
   move_forward(35,6);
-  Arm_Servo.SetDegree(134);
+  Arm_Servo.SetDegree(143);
   move_forward(35,0.5);
 
-  Arm_Servo.SetDegree(135);
+  Arm_Servo.SetDegree(144);
   move_forward(35,0.5);
 
-  move_arm(128, 28);
+  move_arm(137, 37);
 
 }
 
 void placeAppleBucket(){
-  Arm_Servo.SetMin(863);
-  Arm_Servo.SetMax(2410);
 
-  move_arm(38, 100);
+  move_arm(47, 109);
   
   move_forward(-25,2.5);
   move_forward(40,2);
 
-  Arm_Servo.SetDegree(112);
+  Arm_Servo.SetDegree(121);
   Sleep(0.5);
   
   move_forward(-35,6);
-  Arm_Servo.SetDegree(115);
+  Arm_Servo.SetDegree(124);
 
   move_forward(35,5);
   move_forward(-35, 5);
 }
 
-void ERCMain()
+void move_to_lever (int lever){
+
+  if (lever==0){
+    turn_left(15);
+    move_forward(25, 1.5);
+  } 
+  if (lever==1){
+    turn_right(1);
+  }
+  if (lever==2){
+    turn_right(15);
+    move_forward(25, 1.5);
+  }
+}
+
+  
+
+void flip_lever(){ 
+  move_arm(120, 80);
+  move_forward(25, 6);
+  Arm_Servo.SetDegree(149);
+  move_forward(-25, 4);
+  Arm_Servo.SetDegree(170);
+  move_forward(25, 5);
+  Arm_Servo.SetDegree(145);
+}
+int main (void) 
 {
-    Arm_Servo.SetMin(863);
-    Arm_Servo.SetMax(2410);
-      //Read line color
-    float Color;
-    
-    //Find value of CDS cell to determine color
+
+  RCS.InitializeTouchMenu("1240E5WFU"); // Run Menu to select Region (e.g., A, B, C, D)
+
+  Arm_Servo.SetMin(600);
+  Arm_Servo.SetMax(2400);
+    //Read line color
+  float Color;
+  
+  //Find value of CDS cell to determine color
+  Color = CDS_Sensor.Value();
+
+  while(Color > 2.0)
+    {
     Color = CDS_Sensor.Value();
+  }
   
-    while(Color > 2.0)
-      {
-      Color = CDS_Sensor.Value();
-    }
-    
-  //go to apple bucket line
-    PID_Drive(45,16.5);
-    turn_left(48);
+//go to apple bucket line
+  PID_Drive(45,16.5);
+  turn_left(51);
+
+  //pick up apple bucket
+  appleBucketPickup();
+
+  //drive to front of ramp & line up
+  PID_Drive(-45,10);
+  turn_right(90);
+  move_forward(-45, 3);
+  turn_right(90);
+  PID_Drive(45,12);
+  turn_left(93);
+
+  //go up ramp and to table
+  PID_Drive(55,23);
+  turn_left(5);
+  PID_Drive(45,13);
+  turn_right(20);
+
+  //put the apple bucket down
+  placeAppleBucket();
+
+  //run to middle from table
+  turn_left(64);
+  PID_Drive(25, 13.5);
+
+  int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+  LCD.WriteLine(lever);
+
+  move_to_lever(lever);
+  flip_lever();
+
+/*
+Arm_Servo.SetDegree(100);
+//move_forward(25, 5);
+Sleep(2.0);
+Arm_Servo.SetDegree(145);
+
+//move_forward(-25, 5);
+Arm_Servo.SetDegree(170);
+//move_forward(25, 5);
+Sleep(2.0);
+Arm_Servo.SetDegree(140);
+*/
+
   
-    //pick up apple bucket
-    appleBucketPickup();
-  
-    //drive to front of ramp & line up
-    PID_Drive(-45,10);
-    turn_right(90);
-    move_forward(-45, 3);
-    turn_right(90);
-    PID_Drive(45,12);
-    turn_left(97);
-  
-    //go up ramp and to table
-    PID_Drive(55,23);
-    turn_left(10);
-    PID_Drive(45,13);
-    turn_right(20);
-  
-    //put the apple bucket down
-    placeAppleBucket();
 }
