@@ -313,16 +313,16 @@ void appleBucketPickup(){
 
 void placeAppleBucket(){
 
-  move_arm(47, 109);
+  move_arm(47, 115);
   
   move_forward(-25,2.5);
-  move_forward(40,2);
+  move_forward(35,2);
 
-  Arm_Servo.SetDegree(121);
+  Arm_Servo.SetDegree(124);
   Sleep(0.5);
   
   move_forward(-35,6);
-  Arm_Servo.SetDegree(124);
+  Arm_Servo.SetDegree(126);
 
   move_forward(35,5);
   move_forward(-35, 5);
@@ -331,33 +331,35 @@ void placeAppleBucket(){
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(15);
+    turn_left(10);
     move_forward(25, 1.5);
   } 
   if (lever==1){
     turn_right(1);
+    move_forward(25, 0.5);
   }
   if (lever==2){
-    turn_right(15);
+    turn_right(22);
     move_forward(25, 1.5);
   }
 }
 
-  
-
 void flip_lever(){ 
   move_arm(120, 80);
   move_forward(25, 6);
-  Arm_Servo.SetDegree(149);
+  Arm_Servo.SetDegree(152);
+  Sleep(1.0);
   move_forward(-25, 4);
   Arm_Servo.SetDegree(170);
+  Sleep(4.0);
   move_forward(25, 5);
-  Arm_Servo.SetDegree(145);
+  Arm_Servo.SetDegree(150);
 }
+
 int main (void) 
 {
 
-  RCS.InitializeTouchMenu("1240E5WFU"); // Run Menu to select Region (e.g., A, B, C, D)
+  RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
 
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
@@ -384,24 +386,25 @@ int main (void)
   turn_right(90);
   move_forward(-45, 3);
   turn_right(90);
-  PID_Drive(45,12);
-  turn_left(93);
+  PID_Drive(45,11);
+  turn_left(85);
 
   //go up ramp and to table
   PID_Drive(55,23);
-  turn_left(5);
+  //turn_right(15);
   PID_Drive(45,13);
-  turn_right(20);
+  turn_right(15);
 
   //put the apple bucket down
   placeAppleBucket();
 
   //run to middle from table
   turn_left(64);
-  PID_Drive(25, 13.5);
+  PID_Drive(25, 14.5);
 
   int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
   LCD.WriteLine(lever);
+  lever = 2;
 
   move_to_lever(lever);
   flip_lever();
