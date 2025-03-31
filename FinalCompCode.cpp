@@ -1,3 +1,4 @@
+
 #include <FEHLCD.h>
 #include <FEHIO.h>
 #include <FEHUtility.h>
@@ -6,12 +7,88 @@
 #include <stdio.h>
 #include <FEHMotor.h>
 #include <FEHBattery.h>
+#include <FEHServo.h>
+#include <FEHRCS.h>
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
 DigitalEncoder right_encoder(FEHIO::P1_6);
 DigitalEncoder left_encoder(FEHIO::P1_4);
 AnalogInputPin CDS_Sensor(FEHIO::P2_7);
+FEHServo Arm_Servo(FEHServo::Servo0);
+
+// PID Constants (To be tuned)
+float Kp = 0.385;  // Proportional gain
+float Ki = 0.0025;  // Integral gain   0.01
+float Kd = 0.150;  // Derivative gain  0.2
+
+// Conversion factor for encoder counts to inches
+const float COUNTS_PER_INCH = 33.7408479355;  // ≈ 33.76
+
+// Function to limit power within a given range
+float LimitPower(float power, float maxPower) 
+{
+    if (power > maxPower) return maxPower;
+    if (power < -maxPower) return -maxPower;
+    return power;
+}
+
+
+
+//PID control for individual motor
+float PID_Control(float targetCounts, int currentCounts, float lastError, float &integral, float maxPower, float &derivative) {
+    float error = targetCounts - currentCounts;
+    integral += error;
+    derivative = error - lastError;
+
+    // Compute PID power
+    float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
+    power = LimitPower(power, maxPower); // Limit power
+
+    //LCD.WriteLine("Integral Error: ");
+    //LCD.WriteLine(integral);
+    //LCD.WriteLine("Derivative Error:");
+    //LCD.WriteLine(derivative);
+    //LCD.WriteLine("Proportional Error:");
+    //LCD.WriteLine(error);
+
+    return power;
+}
+
+// PID driving function (each motor independently controlled)
+void PID_Drive(float maxPower, float targetDistance) 
+{
+    float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
+    float leftDerivative = 0, rightDerivative = 0;
+    int leftCounts = 0, rightCounts = 0;
+    float targetCounts = targetDistance * COUNTS_PER_INCH;
+
+    // Reset encoders
+    left_encoder.ResetCounts();
+    right_encoder.ResetCounts();
+
+    while ((leftCounts + rightCounts) / 2.0 < targetCounts) 
+    {
+        leftCounts = left_encoder.Counts();
+        rightCounts = right_encoder.Counts();
+
+        float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
+        float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+
+        left_motor.SetPercent(-leftPower);
+        right_motor.SetPercent(-rightPower);
+
+        // Update last error outside of PID function
+        leftError = targetCounts - leftCounts;
+        rightError = targetCounts - rightCounts;
+
+        Sleep(10);  // Small delay for stability
+    }
+
+    // Stop motors
+    left_motor.Stop();
+    right_motor.Stop();
+}
 
 void move_forward(int percent, int inches) //using encoders
 {
@@ -26,7 +103,22 @@ void move_forward(int percent, int inches) //using encoders
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+    int quit = 0, checks = 0;
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
+      
+      /*should quit out if stuck, not yet tested
+      checks++;
+      int current_count = left_encoder.Counts();
+      int old_encoder_count = 0;
+      if (checks%21 == 0){
+      int old_encoder_count = left_encoder.Counts();
+      }
+      if (checks%43 == 0){
+        if (old_encoder_count == current_count){
+          return;
+        }
+      }*/
+    };
 
     //Turn off motors
     right_motor.Stop();
@@ -39,8 +131,8 @@ void turn_left(int degree){
     left_encoder.ResetCounts();
 
 
-    int percent = 25;
-    int counts = degree * 2.08;
+    int percent = 40;
+    int counts = degree * 1.92857142857;
     right_motor.SetPercent(-1*(percent));
     left_motor.SetPercent((percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -55,8 +147,8 @@ void turn_right(int degree){
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
 
-    int percent = 25;
-    int counts = degree * 2.08;
+    int percent = 40;
+    int counts = degree * 1.92857142857;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(-1* (percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -121,6 +213,149 @@ void turn_right(int degree){
   }
 }
 
+void window()
+{
+  /*  
+  //When the voltage changes, call “move forward” function for 17 inches 
+    move_forward(-25, 13);
+
+    Sleep(2.0);
+    
+    //Call the “turn” function at 58 degrees to turn so that robot is parallel to window 
+    turn_left(30);
+  
+    Sleep(2.0);
+  
+   
+    move_forward(25, 4);
+    Sleep(2.0);
+  
+    turn_left(15);
+    move_forward(25, 1.5);
+    Sleep(2.0);
+
+    turn_right(20);
+    move_forward(-25,1.5);
+    Sleep(2.0);
+    */
+    int inches = 4;
+    int percent = 35;
+    //Call the “move forward” function for 5 inches. 
+    int counts = inches * 33.7408479355;
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    right_motor.SetPercent(-percent);
+    left_motor.SetPercent(-percent-15);
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+    Sleep(2.0);
+  
+    //Call “move5 forward” for backwards 5 inches. 
+
+    percent = -25; 
+
+    counts = inches * 33.7408479355;
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    right_motor.SetPercent(-percent);
+    left_motor.SetPercent(-percent + 15);
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+
+}
+
+void move_arm(int start, int degree){
+
+  while (start < degree){
+    Arm_Servo.SetDegree(start);
+    start += 1;
+    Sleep(0.005);
+  }
+  while (start > degree){
+    Arm_Servo.SetDegree(start);
+    start -= 1;
+    Sleep(0.005);
+  }
+}
+
+void appleBucketPickup(){
+
+  Arm_Servo.SetDegree(142);
+  Sleep(0.5);
+  move_forward(35,6);
+  Arm_Servo.SetDegree(143);
+  move_forward(35,0.5);
+
+  Arm_Servo.SetDegree(144);
+  move_forward(35,0.5);
+
+  move_arm(137, 37);
+
+}
+
+void placeAppleBucket(){
+
+  move_arm(47, 115);
+  
+  move_forward(-25,2.5);
+  move_forward(35,2);
+
+  Arm_Servo.SetDegree(124);
+  Sleep(0.5);
+  
+  move_forward(-35,6);
+  Arm_Servo.SetDegree(126);
+
+  move_forward(35,5);
+  move_forward(-35, 5);
+}
+
+void move_to_lever (int lever){
+
+  if (lever==0){
+    turn_left(10);
+    move_forward(25, 1.5);
+  } 
+  if (lever==1){
+    turn_right(1);
+    move_forward(25, 0.5);
+  }
+  if (lever==2){
+    turn_right(22);
+    move_forward(25, 1.5);
+  }
+}
+
+void flip_lever(){ 
+  move_arm(120, 80);
+  move_forward(25, 6);
+  Arm_Servo.SetDegree(152);
+  Sleep(1.0);
+  move_forward(-25, 4);
+  Arm_Servo.SetDegree(170);
+  Sleep(4.0);
+  move_forward(25, 5);
+  Arm_Servo.SetDegree(150);
+}
+
 /*
 Line_Follow(in percentage) 
 
@@ -137,44 +372,6 @@ Check_Line()
   If right and middle optosensors values show that they are not on the line, and the left optosensor value shows that it is, call Turn() to turn slightly left 
 
   If left and middle optosensors values show that they are not on the line, and the right optosensor value shows that it is, call Turn() to turn slightly right 
-
-Arm_Move(inches) 
-
-  Convert input (height from floor in inches) to degrees for servo motor 
-
-Apple_Bucket_Pickup 
-
-  Hard – coded to pick up apple bucket with arm 
-
-  Move arm to 4.75 inches 
-
-  Move forward 1-3 inches 
-
-  Move arm to 8 inches 
-
-Place_Apple_Bucket 
-
-  Servo arm moves down a hard-coded value. Robot then backs up. 
-
-  Move arm to 7 inches 
-
-  Move backward 
-
-Move_to_Lever 
-
-  Will find the correct lever that needs to be flipped and drive to it 
-
-Flip_Lever 
-
-  Arm pushes lever down (down to 3 inches/whatever will push the lever & not break it) 
-
-  Calls “move forward” to back up (w/ negative percentage) 
-
-  Arm moves down (down to 0 inches) 
-
-  Calls “move forward” to go back to lever (w/ positive percentage) 
-
-  Arm pushes lever back up (whatever value will push the lever up & not break it) 
 
 Turn_Compost 
 
@@ -202,65 +399,55 @@ Turn_Compost
 int main (void)
 {
 
-  //While the cds cell’s voltage does not show that the light has lit up, do not move 
-   //Read line color
-   float Color;
-  
-   //Find value of CDS cell to determine color
-   Color = CDS_Sensor.Value();
- 
-   while(Color > 2.0)
-   {
-     Color = CDS_Sensor.Value();
-   }
+  RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
 
-  //When the voltage changes, call “move forward” function for 17 inches 
-  move_forward(25, 17);
+  Arm_Servo.SetMin(600);
+  Arm_Servo.SetMax(2400);
+    //Read line color
+  float Color;
   
-  //Call the “turn” function at 58 degrees to turn so that robot is parallel to window 
-  turn_left(58);
+  //Find value of CDS cell to determine color
+  Color = CDS_Sensor.Value();
+
+  while(Color > 2.0)
+    {
+    Color = CDS_Sensor.Value();
+  }
   
-  //Call the “move forward” function for 5 inches. 
-  move_forward(25, 5);
-  
-  //Call “move5 forward” for backwards 5 inches. 
-  move_forward(-25, 5);
-  
-  //Call “turn” and turn 50 degrees 
-  turn_left(50);
-  
-  //“move forward” 18 inches (in case of error) 
-  move_forward(25, 18);
-  
-  //If optosensors sense a black line (should happen around 14 inches), call “line follow” function. 
-  
-  //Call “Apple Bucket Pickup” function 
-  //apple_bucket_pickup();
-  
-  //Call “turn” and turn 130 Degrees 
-  turn_left(130);
-  
-  //Call “move forward” for 24 inches 
-  move_forward(25,24);
-  
-  //Call “turn” to turn 84 degrees so that front of robot faces ramp 
-  turn_left(84);
-  
-  //Call “move forward” for 31 inches. This time, increase the power so that the robot can go up the ramp. Decrease power after robot finishes going up the ramp 
-  move_forward(45, 31);
-  //Call “Place Apple Bucket” 
-  //place_apple_bucket();
-  //Call “turn” and turn 78 degrees 
-  turn_left(78);
-  
-  //Call “move forward” for about 22 inches 
-  move_forward(25, 22);
-  
-  //Call “move to lever” 
-  //move_to_lever();
-  
-  //Call “Flip lever” 
-  //flip_lever();
+//go to apple bucket line
+  PID_Drive(45,16.5);
+  turn_left(51);
+
+  //pick up apple bucket
+  appleBucketPickup();
+
+  //drive to front of ramp & line up
+  PID_Drive(-45,10);
+  turn_right(90);
+  move_forward(-45, 3);
+  turn_right(90);
+  PID_Drive(45,11);
+  turn_left(85);
+
+  //go up ramp and to table
+  PID_Drive(55,23);
+  //turn_right(15);
+  PID_Drive(45,13);
+  turn_right(15);
+
+  //put the apple bucket down
+  placeAppleBucket();
+
+  //run to middle from table
+  turn_left(64);
+  PID_Drive(25, 14.5);
+
+  int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+  LCD.WriteLine(lever);
+  lever = 2;
+
+  move_to_lever(lever);
+  flip_lever();
   
   //Call “turn” and turn –37 degrees 
   turn_right(37);
@@ -277,20 +464,8 @@ int main (void)
   //Call “check light” 
   check_light();
   
-  //Call “turn” to turn -27 degrees clockwise 
-  turn_right(27);
-  
-  //Call “move forward” to drive backwards 25 inches 
-  move_forward(-25,25);
-  
-  //“turn” -63 degrees 
-  turn_right(63);
-  
-  //“move forward” to go backwards 33 inches. 
-  move_forward(-25, 33);
-  
-  //“Turn” -82 degrees clockwise 
-  turn_right(82);
+  //move to window & open it
+  window();
   
   //Call “move forward” to go backwards until optosensors sense a black line. If they do not after 12 inches, go to step 35 
   
