@@ -1,0 +1,100 @@
+#include <FEH.h>
+#include <Arduino.h>
+
+FEHMotor left_motor(FEHMotor::Motor1, 9.0);
+FEHMotor right_motor(FEHMotor::Motor2, 9.0);
+DigitalEncoder right_encoder(FEHIO::Pin11);
+DigitalEncoder left_encoder(FEHIO::Pin8);
+AnalogInputPin CDS_Sensor(FEHIO::Pin14);
+FEHServo Arm_Servo(FEHServo::Servo0);
+
+// PID Constants (To be tuned)
+float Kp = 0.385;  // Proportional gain
+float Ki = 0.0025;  // Integral gain   0.01
+float Kd = 0.150;  // Derivative gain  0.2
+
+// Conversion factor for encoder counts to degrees
+const float COUNTS_PER_DEGREE = 2.3; // Adjust based on your robot's characteristics
+
+// Function to limit motor power within a given range
+float LimitPower(float power, float maxPower) 
+{
+    if (power > maxPower) return maxPower;
+    if (power < -maxPower) return -maxPower;
+    return power;
+}
+
+// PID control function for turning
+float PID_Turn_Control(float targetCounts, int currentCounts, float &integral, float &previousError) 
+{
+    float error = targetCounts - currentCounts;
+    integral += error;
+    float derivative = error - previousError;
+
+    // Compute PID output
+    float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+    // Adjust power based on battery voltage
+    float adjusted_power = (11.5 / Battery.Voltage()) * power;
+    adjusted_power = LimitPower(adjusted_power, 100.0); // Limit power to 100%
+
+    previousError = error;
+
+    return adjusted_power;
+}
+
+// Function to perform a PID-controlled turn
+void PID_Turn(float maxPower, float targetDegrees) {
+    float integral = 0.0;
+    float previousError = 0.0;
+    int leftCounts = 0, rightCounts = 0;
+    float targetCounts = fabs(targetDegrees) * COUNTS_PER_DEGREE;
+
+    // Determine turn direction
+    int leftMotorDirection = (targetDegrees > 0) ? -1 : 1;
+    int rightMotorDirection = (targetDegrees > 0) ? 1 : -1;
+
+    // Reset encoders
+    left_encoder.ResetCounts();
+    right_encoder.ResetCounts();
+
+    while ((leftCounts + rightCounts) / 2.0 < targetCounts) {
+        leftCounts = left_encoder.Counts();
+        rightCounts = right_encoder.Counts();
+
+        float leftPower = PID_Turn_Control(targetCounts, leftCounts, integral, previousError);
+        float rightPower = PID_Turn_Control(targetCounts, rightCounts, integral, previousError);
+
+        left_motor.SetPercent(leftMotorDirection * leftPower);
+        right_motor.SetPercent(rightMotorDirection * rightPower);
+
+        Sleep(10); // Small delay for stability
+    }
+
+    // Stop motors after turn is complete
+    left_motor.Stop();
+    right_motor.Stop();
+}
+
+
+void ERCMain()
+{
+    Sleep(2.0);
+
+    //Turn 90 degrees counterclockwise
+    PID_Turn(50.0, 90.0);
+    Sleep(5.0);
+
+    //Turn 45 degrees counterclockwise
+    PID_Turn(50.0, 45.0);
+    Sleep(5.0);
+
+    // Example usage: Turn450 degrees clockwise
+    PID_Turn(50.0, -45.0);
+    Sleep(5.0);
+
+    // Example usage: Turn 90 degrees clockwise
+    PID_Turn(50.0, -90.0);
+    Sleep(2.0);
+
+}
