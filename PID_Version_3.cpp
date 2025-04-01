@@ -34,7 +34,11 @@ float PID_Control(float targetCounts, int currentCounts, float lastError, float 
 
     // Compute PID power
     float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
-    power = LimitPower(power, maxPower); // Limit power
+
+    //Calculate actual power
+    float actual_power;
+    actual_power = (11.5/Battery.Voltage())*power ;
+    power = LimitPower(actual_power, maxPower); // Limit power
 
     //LCD.WriteLine("Integral Error: ");
     //LCD.WriteLine(integral);
