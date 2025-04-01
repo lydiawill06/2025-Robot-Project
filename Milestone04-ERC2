@@ -48,39 +48,66 @@ float PID_Control(float targetCounts, int currentCounts, float lastError, float 
     return power;
 }
 
+
 // PID driving function (each motor independently controlled)
-void PID_Drive(float maxPower, float targetDistance) 
-{
-    float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
-    float leftDerivative = 0, rightDerivative = 0;
-    int leftCounts = 0, rightCounts = 0;
-    float targetCounts = targetDistance * COUNTS_PER_INCH;
+void PID_Drive(float maxPower, float targetDistance) {
+  float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
+  float leftDerivative = 0, rightDerivative = 0;
+  int leftCounts = 0, rightCounts = 0;
+  float targetCounts = targetDistance * COUNTS_PER_INCH;
 
-    // Reset encoders
-    left_encoder.ResetCounts();
-    right_encoder.ResetCounts();
+  int leftOscillationCount = 0, rightOscillationCount = 0;
+  int oscillationThreshold = 5; // Number of consecutive sign changes to detect oscillation
 
-    while ((leftCounts + rightCounts) / 2.0 < targetCounts) 
-    {
-        leftCounts = left_encoder.Counts();
-        rightCounts = right_encoder.Counts();
+  // Reset encoders
+  left_encoder.ResetCounts();
+  right_encoder.ResetCounts();
 
-        float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
-        float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+  while ((leftCounts + rightCounts) / 2.0 < targetCounts) {
+      leftCounts = left_encoder.Counts();
+      rightCounts = right_encoder.Counts();
 
-        left_motor.SetPercent(-leftPower);
-        right_motor.SetPercent(-rightPower);
+      float currentLeftError = targetCounts - leftCounts;
+      float currentRightError = targetCounts - rightCounts;
 
-        // Update last error outside of PID function
-        leftError = targetCounts - leftCounts;
-        rightError = targetCounts - rightCounts;
+      // Check for oscillations in left motor
+      if (leftError * currentLeftError < 0) { // Sign change detected
+          leftOscillationCount++;
+      } else {
+          leftOscillationCount = 0; // Reset if no sign change
+      }
 
-        Sleep(10);  // Small delay for stability
-    }
+      // Check for oscillations in right motor
+      if (rightError * currentRightError < 0) { // Sign change detected
+          rightOscillationCount++;
+      } else {
+          rightOscillationCount = 0; // Reset if no sign change
+      }
 
-    // Stop motors
-    left_motor.Stop();
-    right_motor.Stop();
+      // If oscillation threshold is exceeded, stop the motors
+      if (leftOscillationCount >= oscillationThreshold || rightOscillationCount >= oscillationThreshold) {
+          left_motor.Stop();
+          right_motor.Stop();
+          LCD.WriteLine("Oscillation detected. Motors stopped.");
+          return; // Exit the function
+      }
+
+      float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
+      float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+
+      left_motor.SetPercent(-leftPower);
+      right_motor.SetPercent(-rightPower);
+
+      // Update last errors
+      leftError = currentLeftError;
+      rightError = currentRightError;
+
+      Sleep(10);  // Small delay for stability
+  }
+
+  // Stop motors
+  left_motor.Stop();
+  right_motor.Stop();
 }
 
 void move_forward(int percent, int inches) //using encoders
@@ -96,22 +123,7 @@ void move_forward(int percent, int inches) //using encoders
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    int quit = 0, checks = 0;
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
-      
-      /*should quit out if stuck, not yet tested
-      checks++;
-      int current_count = left_encoder.Counts();
-      int old_encoder_count = 0;
-      if (checks%21 == 0){
-      int old_encoder_count = left_encoder.Counts();
-      }
-      if (checks%43 == 0){
-        if (old_encoder_count == current_count){
-          return;
-        }
-      }*/
-    };
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){};
 
     //Turn off motors
     right_motor.Stop();
@@ -125,7 +137,7 @@ void turn_left(int degree){
 
 
     int percent = 40;
-    int counts = degree * 1.92857142857;
+    int counts = degree * 2.06496081578   ;
     right_motor.SetPercent(-1*(percent));
     left_motor.SetPercent((percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -141,7 +153,7 @@ void turn_right(int degree){
     left_encoder.ResetCounts();
 
     int percent = 40;
-    int counts = degree * 1.92857142857;
+    int counts = degree * 2.06496081578    ;
     right_motor.SetPercent(percent);
     left_motor.SetPercent(-1* (percent));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
@@ -351,7 +363,6 @@ void flip_lever(){
 
 void ERCMain()
 {
-  
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
 
   Arm_Servo.SetMin(600);
