@@ -365,9 +365,10 @@ void flip_lever(){
 void turn_compost(){
   Com_Servo.SetDegree(0);
   Sleep(1.0);
-  move_forward(-45, 3);
-  //first turn for 180
-  Com_Servo.SetDegree(180);
+ move_forward(-45, 6);
+
+  //first turn for 90
+  Com_Servo.SetDegree(145); //90
   Sleep(1.0);
 
   move_forward(45, 3);
@@ -378,25 +379,44 @@ void turn_compost(){
 
   move_forward(-45, 3);
 
-  //next turn for 300;
-  Com_Servo.SetDegree(120);
+  //turn for 270
+  Com_Servo.SetDegree(145); //270~
   Sleep(1.0);
 
+  move_forward(45, 3);
 
-  //turn back to 180
+  //reset
+  Com_Servo.SetDegree(0);
+  Sleep(1.0);
+  move_forward(-45, 3);
+
+  Com_Servo.SetDegree(180); //300~
+  Sleep(1.0);
+
+  move_forward(45, 3);
+
+  Com_Servo.SetDegree(0);
+  Sleep(1.0);
+
+  move_forward(45, 3);
+  Com_Servo.SetDegree(145); //270~
+  Sleep(1.0);
+
+  move_forward(-45, 3);
   Com_Servo.SetDegree(0);
   Sleep(1.0);
 
   move_forward(45, 3);
 
-  //set for final turn
-  Com_Servo.SetDegree(180);
+  Com_Servo.SetDegree(145); //180
   Sleep(1.0);
 
   move_forward(-45, 3);
-
-  //turn back to original
   Com_Servo.SetDegree(0);
+  Sleep(1.0);
+
+  move_forward(45, 3);
+
 }
 
 void ERCMain()
@@ -405,21 +425,39 @@ void ERCMain()
 
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
-  Com_Servo.SetMin(600);
-  Com_Servo.SetMax(2400);
+  Com_Servo.SetMin(900);
+  Com_Servo.SetMax(2100);
 
   //Read line color
   float Color;
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
-/*
-  while(Color > 2.0)
+  int color_count = 0;
+  float time_count = TimeNow();
+  
+  while(true)
     {
     Color = CDS_Sensor.Value();
+    if (Color > 2.0){
+      color_count++;
+    }
+    if (color_count > 10){
+      break;
+    }
+    if ((TimeNow() - time_count) > 30){
+      break;
+    }
   }
-    */
+ 
+  move_forward(-25, 5.25);
+  turn_right(46.5);
   
   turn_compost();
+  Arm_Servo.SetDegree(40);
+ PID_Drive(25, 10);
+  move_forward(45, 4);
+
+
 
 }
