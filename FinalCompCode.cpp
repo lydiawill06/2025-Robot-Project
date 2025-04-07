@@ -8,6 +8,9 @@ DigitalEncoder left_encoder(FEHIO::Pin8);
 AnalogInputPin CDS_Sensor(FEHIO::Pin14);
 FEHServo Arm_Servo(FEHServo::Servo0);
 FEHServo Com_Servo(FEHServo::Servo1);
+DigitalInputPin right_bump(FEHIO::Pin1);
+DigitalInputPin left_bump(FEHIO::Pin4);
+
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -35,7 +38,11 @@ float PID_Control(float targetCounts, int currentCounts, float lastError, float 
 
     // Compute PID power
     float power = (Kp * error) + (Ki * integral) + (Kd * derivative);
-    power = LimitPower(power, maxPower); // Limit power
+
+    //Calculate actual power
+    float actual_power;
+    actual_power = (11.5/Battery.Voltage())*power ;
+    power = LimitPower(actual_power, maxPower); // Limit power
 
     //LCD.WriteLine("Integral Error: ");
     //LCD.WriteLine(integral);
@@ -47,39 +54,100 @@ float PID_Control(float targetCounts, int currentCounts, float lastError, float 
     return power;
 }
 
+
 // PID driving function (each motor independently controlled)
 void PID_Drive(float maxPower, float targetDistance) 
 {
-    float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
-    float leftDerivative = 0, rightDerivative = 0;
-    int leftCounts = 0, rightCounts = 0;
-    float targetCounts = targetDistance * COUNTS_PER_INCH;
+  float leftError = 0, rightError = 0, leftIntegral = 0, rightIntegral = 0;
+  float leftDerivative = 0, rightDerivative = 0;
+  int leftCounts = 0, rightCounts = 0;
+  float targetCounts = targetDistance * COUNTS_PER_INCH;
 
-    // Reset encoders
-    left_encoder.ResetCounts();
-    right_encoder.ResetCounts();
+  int leftOscillationCount = 0, rightOscillationCount = 0;
+  int oscillationThreshold = 5; // Number of consecutive sign changes to detect oscillation
 
-    while ((leftCounts + rightCounts) / 2.0 < targetCounts) 
-    {
-        leftCounts = left_encoder.Counts();
-        rightCounts = right_encoder.Counts();
+  //If the robot hits a wall
+  int CollisionCount = 0;
+  int CollisionThreshold = 50;
 
-        float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
-        float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+  // Reset encoders
+  left_encoder.ResetCounts();
+  right_encoder.ResetCounts();
 
-        left_motor.SetPercent(-leftPower);
-        right_motor.SetPercent(-rightPower);
+  while ((leftCounts + rightCounts) / 2.0 < targetCounts) 
+  {
+      leftCounts = left_encoder.Counts();
+      rightCounts = right_encoder.Counts();
 
-        // Update last error outside of PID function
-        leftError = targetCounts - leftCounts;
-        rightError = targetCounts - rightCounts;
+      float currentLeftError = targetCounts - leftCounts;
+      float currentRightError = targetCounts - rightCounts;
 
-        Sleep(10);  // Small delay for stability
-    }
+      // Check for oscillations in left motor
+      if (leftError * currentLeftError < 0) 
+      { // Sign change detected
+          leftOscillationCount++;
+      } 
+      else 
+      {
+          leftOscillationCount = 0; // Reset if no sign change
+      }
 
-    // Stop motors
-    left_motor.Stop();
-    right_motor.Stop();
+      // Check for oscillations in right motor
+      if (rightError * currentRightError < 0) 
+      { // Sign change detected
+          rightOscillationCount++;
+      } 
+      else 
+      {
+          rightOscillationCount = 0; // Reset if no sign change
+      }
+
+      // If oscillation threshold is exceeded, stop the motors
+      if (leftOscillationCount >= oscillationThreshold || rightOscillationCount >= oscillationThreshold) 
+      {
+          left_motor.Stop();
+          right_motor.Stop();
+          LCD.WriteLine("Oscillation detected. Motors stopped.");
+          Buzzer.Beep();
+          return; // Exit the function
+      }
+
+
+      // Check for collsion in both motors
+      if (rightError == currentRightError && leftError == currentLeftError)
+      { // Sign change detected
+          CollisionCount++;
+      } 
+      else 
+      {
+          CollisionCount = 0; // Reset if no sign change
+      }
+
+      // If collision threshold is exceeded, stop the motors
+      if (CollisionCount >= CollisionThreshold) 
+      {
+          left_motor.Stop();
+          right_motor.Stop();
+          LCD.WriteLine("Collision detected. Motors stopped.");
+          return; // Exit the function
+      }
+
+      float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
+      float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+
+      left_motor.SetPercent(-leftPower);
+      right_motor.SetPercent(-rightPower);
+
+      // Update last errors
+      leftError = currentLeftError;
+      rightError = currentRightError;
+
+      Sleep(10);  // Small delay for stability
+  }
+
+  // Stop motors
+  left_motor.Stop();
+  right_motor.Stop();
 }
 
 void move_forward(int percent, int inches) //using encoders
@@ -406,11 +474,11 @@ void ERCMain()
     Color = CDS_Sensor.Value();
   }
 
-  move_forward(45, 4);
-  move_forward(45, 3);
+  move_forward(-45, 1.5);
+  move_forward(45, 1.5);
   
 //go to apple bucket line
-  PID_Drive(45,16.5);
+  PID_Drive(45,17);
   turn_left(51);
 
   //pick up apple bucket
@@ -432,7 +500,7 @@ void ERCMain()
 
   //put the apple bucket down
   placeAppleBucket();
-
+/*
   //run to middle from table
   turn_left(64);
   PID_Drive(25, 14.5);
@@ -443,7 +511,7 @@ void ERCMain()
 
   move_to_lever(lever);
   flip_lever();
-  /*
+  
   //Call “turn” and turn –37 degrees 
   turn_right(37);
   
