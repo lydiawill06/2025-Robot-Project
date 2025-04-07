@@ -1,21 +1,13 @@
+#include <FEH.H>
+#include <Arduino.h>
 
-#include <FEHLCD.h>
-#include <FEHIO.h>
-#include <FEHUtility.h>
-#include <FEHMotor.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <FEHMotor.h>
-#include <FEHBattery.h>
-#include <FEHServo.h>
-#include <FEHRCS.h>
-
-FEHMotor left_motor(FEHMotor::Motor2, 9.0);
-FEHMotor right_motor(FEHMotor::Motor1, 9.0);
-DigitalEncoder right_encoder(FEHIO::P1_6);
-DigitalEncoder left_encoder(FEHIO::P1_4);
-AnalogInputPin CDS_Sensor(FEHIO::P2_7);
+FEHMotor left_motor(FEHMotor::Motor1, 9.0);
+FEHMotor right_motor(FEHMotor::Motor2, 9.0);
+DigitalEncoder right_encoder(FEHIO::Pin11);
+DigitalEncoder left_encoder(FEHIO::Pin8);
+AnalogInputPin CDS_Sensor(FEHIO::Pin14);
 FEHServo Arm_Servo(FEHServo::Servo0);
+FEHServo Com_Servo(FEHServo::Servo1);
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -396,7 +388,7 @@ Turn_Compost
   Rotate Servo motor on the back -180 degrees 
 */
 
-int main (void)
+void ERCMain()
 {
 
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
@@ -413,6 +405,9 @@ int main (void)
     {
     Color = CDS_Sensor.Value();
   }
+
+  move_forward(45, 4);
+  move_forward(45, 3);
   
 //go to apple bucket line
   PID_Drive(45,16.5);
@@ -448,7 +443,7 @@ int main (void)
 
   move_to_lever(lever);
   flip_lever();
-  
+  /*
   //Call “turn” and turn –37 degrees 
   turn_right(37);
   
@@ -473,7 +468,7 @@ int main (void)
   //turn_compost();
   
   //Call “move forward” to drive forward until bumper switches sense that the robot has hit the button (or the robot has traveled more than 22 inches) 
-  move_forward(35, 22);
-  move_forward(45, 2);
-
+  move_forward(35, 10);
+  move_forward(45, 5);
+*/
 }
