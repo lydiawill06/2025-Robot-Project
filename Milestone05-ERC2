@@ -1,3 +1,4 @@
+
 #include <FEH.h>
 #include <Arduino.h>
 
@@ -334,6 +335,20 @@ void placeAppleBucket(){
   move_forward(-35, 5);
 }
 
+void move_com(int start, int degree){
+
+  while (start < degree){
+    Com_Servo.SetDegree(start);
+    start += 1;
+    Sleep(0.005);
+  }
+  while (start > degree){
+    Com_Servo.SetDegree(start);
+    start -= 1;
+    Sleep(0.005);
+  }
+}
+
 void move_to_lever (int lever){
 
   if (lever==0){
@@ -365,57 +380,65 @@ void flip_lever(){
 void turn_compost(){
   Com_Servo.SetDegree(0);
   Sleep(1.0);
- move_forward(-45, 6);
+ move_forward(-25, 7.7);
 
   //first turn for 90
-  Com_Servo.SetDegree(145); //90
+  move_com(0, 145);
   Sleep(1.0);
 
-  move_forward(45, 3);
+  move_forward(25, 3);
 
   //reset
-  Com_Servo.SetDegree(0);
+  Com_Servo.SetDegree(15);
   Sleep(1.0);
 
-  move_forward(-45, 3);
+  move_forward(-25, 3);
 
   //turn for 270
-  Com_Servo.SetDegree(145); //270~
+  move_com(15, 145);
   Sleep(1.0);
 
-  move_forward(45, 3);
+  move_forward(25, 3);
 
   //reset
-  Com_Servo.SetDegree(0);
+  Com_Servo.SetDegree(10);
   Sleep(1.0);
-  move_forward(-45, 3);
+  move_forward(-25, 3);
 
-  Com_Servo.SetDegree(180); //300~
-  Sleep(1.0);
-
-  move_forward(45, 3);
-
-  Com_Servo.SetDegree(0);
+  move_com(10, 180);
   Sleep(1.0);
 
-  move_forward(45, 3);
+
+  move_com(180, 10);
+  Sleep(1.0);
+
+  move_forward(25, 3);
   Com_Servo.SetDegree(145); //270~
   Sleep(1.0);
 
-  move_forward(-45, 3);
-  Com_Servo.SetDegree(0);
+  move_forward(-25, 3);
+  move_com(145, 15);
   Sleep(1.0);
 
-  move_forward(45, 3);
+  move_forward(25, 3);
 
   Com_Servo.SetDegree(145); //180
   Sleep(1.0);
 
-  move_forward(-45, 3);
-  Com_Servo.SetDegree(0);
+  move_forward(-25, 3);
+  move_com(145, 0);
   Sleep(1.0);
 
-  move_forward(45, 3);
+  move_forward(25, 3);
+
+  Com_Servo.SetDegree(145); //180
+  Sleep(1.0);
+
+  move_forward(-25, 3);
+  move_com(145, 100);
+  Sleep(1.0);
+
+  move_forward(25, 3);
 
 }
 
@@ -436,27 +459,18 @@ void ERCMain()
   int color_count = 0;
   float time_count = TimeNow();
   
-  while(true)
-    {
-    Color = CDS_Sensor.Value();
-    if (Color > 2.0){
-      color_count++;
-    }
-    if (color_count > 10){
-      break;
-    }
-    if ((TimeNow() - time_count) > 30){
-      break;
-    }
-  }
+  while(Color > 2.0)
+  {
+  Color = CDS_Sensor.Value();
+}
  
-  move_forward(-25, 5.25);
-  turn_right(46.5);
+  move_forward(-25, 5.5);
+  turn_right(49);
   
   turn_compost();
   Arm_Servo.SetDegree(40);
  PID_Drive(25, 10);
-  move_forward(45, 4);
+  move_forward(45, 7);
 
 
 
