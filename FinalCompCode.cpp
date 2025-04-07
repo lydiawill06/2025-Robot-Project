@@ -478,26 +478,26 @@ void ERCMain()
   move_forward(45, 1.5);
   
 //go to apple bucket line
-  PID_Drive(45,17);
-  turn_left(51);
+  PID_Drive(45,18.25);
+  turn_left(49.5);
 
   //pick up apple bucket
   appleBucketPickup();
 
   //drive to front of ramp & line up
   PID_Drive(-45,10);
-  turn_right(90);
+  turn_right(95);
   move_forward(-45, 3);
-  turn_right(90);
+  turn_right(95);
   PID_Drive(45,11);
-  turn_left(85);
+  turn_left(80);
 
   //go up ramp and to table
   PID_Drive(55,23);
   //turn_right(15);
   PID_Drive(45,13);
   turn_right(15);
-
+/*
   //put the apple bucket down
   placeAppleBucket();
 /*
