@@ -12,6 +12,7 @@
 
 FEHMotor left_motor(FEHMotor::Motor2, 9.0);
 FEHMotor right_motor(FEHMotor::Motor1, 9.0);
+FEHMotor compost_motor(FEHMotor::Motor3, 5.0);
 DigitalEncoder right_encoder(FEHIO::P1_6);
 DigitalEncoder left_encoder(FEHIO::P1_4);
 AnalogInputPin CDS_Sensor(FEHIO::P2_7);
