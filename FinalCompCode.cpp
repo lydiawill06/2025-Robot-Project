@@ -3,11 +3,11 @@
 
 FEHMotor left_motor(FEHMotor::Motor1, 9.0);
 FEHMotor right_motor(FEHMotor::Motor2, 9.0);
+FEHMotor compost_motor(FEHMotor::Motor3, 5.0);
 DigitalEncoder right_encoder(FEHIO::Pin11);
 DigitalEncoder left_encoder(FEHIO::Pin8);
 AnalogInputPin CDS_Sensor(FEHIO::Pin14);
 FEHServo Arm_Servo(FEHServo::Servo0);
-FEHServo Com_Servo(FEHServo::Servo1);
 DigitalInputPin right_bump(FEHIO::Pin1);
 DigitalInputPin left_bump(FEHIO::Pin4);
 
@@ -19,6 +19,7 @@ float Kd = 0.150;  // Derivative gain  0.2
 
 // Conversion factor for encoder counts to inches
 const float COUNTS_PER_INCH = 33.7408479355;  // ≈ 33.76
+const float COUNTS_PER_DEGREE = 2.28;
 
 // Function to limit power within a given range
 float LimitPower(float power, float maxPower) 
@@ -150,8 +151,60 @@ void PID_Drive(float maxPower, float targetDistance)
   right_motor.Stop();
 }
 
+
+// PID_Turn function: Using separate PID variables for each motor.
+void PID_Turn(float maxPower, float targetDegrees) 
+{
+    // Define separate PID variables for left and right motors
+    float leftError = 0, rightError = 0;
+    float leftIntegral = 0, rightIntegral = 0;
+    float leftDerivative = 0, rightDerivative = 0;
+    int leftCounts = 0, rightCounts = 0;
+
+    // Convert desired turn (in degrees) to target encoder counts.
+    // Use fabs() to ignore the sign when converting degrees to counts.
+    float targetCounts = fabs(targetDegrees) * COUNTS_PER_DEGREE;
+
+    // Determine turn direction:
+    // For a positive targetDegrees, a counterclockwise turn
+    // For a negative targetDegrees, a clockwise turn
+    int leftMotorDirection = (targetDegrees > 0) ? 1 : -1;
+    int rightMotorDirection = (targetDegrees > 0) ? -1 : 1;
+
+    // Reset encoders
+    left_encoder.ResetCounts();
+    right_encoder.ResetCounts();
+
+    while ( ( (abs(leftCounts) + abs(rightCounts)) / 2.0) < targetCounts) {
+        // Get current encoder counts (using absolute values so that turn progress is measured correctly)
+        leftCounts = abs(left_encoder.Counts());
+        rightCounts = abs(right_encoder.Counts());
+
+        // Compute PID power for each motor
+        float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
+        float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
+
+        // Command motors with appropriate direction
+        left_motor.SetPercent(leftMotorDirection * leftPower);
+        right_motor.SetPercent(rightMotorDirection * rightPower);
+
+        // Update errors for next iteration
+        leftError = targetCounts - leftCounts;
+        rightError = targetCounts - rightCounts;
+
+        Sleep(10); // Small delay for stability
+    }
+
+    // Stop motors after the turn is complete
+    left_motor.Stop();
+    right_motor.Stop();
+}
+
+
+
 void move_forward(int percent, int inches) //using encoders
 {
+    int bump_switch_counter = 0;
     int counts = inches * 33.7408479355;
     //Reset encoder counts
     right_encoder.ResetCounts();
@@ -178,6 +231,18 @@ void move_forward(int percent, int inches) //using encoders
           return;
         }
       }*/
+      if(right_bump.Value() == 0 && left_bump.Value() == 0)
+      {
+        bump_switch_counter = bump_switch_counter+1 ;
+        if(bump_switch_counter == 8)
+        {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+        }
+      }
+
     };
 
     //Turn off motors
@@ -218,7 +283,7 @@ void turn_right(int degree){
     left_motor.Stop();
 } 
 
-  void check_light()
+void check_light()
   { 
   //Read line color
   float Color;
@@ -342,16 +407,49 @@ void window()
 
 }
 
-void move_arm(int start, int degree){
+void move_arm(int current_degree, int final_degree){
 
-  while (start < degree){
-    Arm_Servo.SetDegree(start);
-    start += 1;
+  //Initialize Timeout Counter
+  int Timeout_Counter = 0;
+
+  while (current_degree < final_degree)
+  {
+    int last_degree = current_degree;
+
+    Arm_Servo.SetDegree(current_degree);
+    current_degree += 1;
+
+    //If arm can't move anymore, stop trying to move to prevent burning out motor
+    /*
+    if (current_degree == last_degree)
+    {
+        Timeout_Counter += 1;
+    }
+    if (Timeout_Counter = 5)
+    {
+        return;
+    }
+        */
     Sleep(0.005);
   }
-  while (start > degree){
-    Arm_Servo.SetDegree(start);
-    start -= 1;
+  while (current_degree > final_degree)
+  {
+    int last_degree = current_degree;
+
+    Arm_Servo.SetDegree(current_degree);
+    current_degree -= 1;
+        
+    //If arm can't move anymore, stop trying to move to prevent burning out motor
+    /*
+    if (current_degree == last_degree)
+    {
+        Timeout_Counter += 1;
+    }
+    if (Timeout_Counter = 5)
+    {
+        return;
+    }
+        */
     Sleep(0.005);
   }
 }
@@ -459,7 +557,7 @@ Turn_Compost
 void ERCMain()
 {
 
-  RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
+  //RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
 
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
@@ -468,38 +566,51 @@ void ERCMain()
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
-
+/*
   while(Color > 2.0)
     {
     Color = CDS_Sensor.Value();
   }
-
+*/
+                            Sleep(3.0);
   move_forward(-45, 1.5);
   move_forward(45, 1.5);
   
 //go to apple bucket line
   PID_Drive(45,18.25);
-  turn_left(49.5);
+  turn_left(49.0);
 
   //pick up apple bucket
   appleBucketPickup();
 
   //drive to front of ramp & line up
   PID_Drive(-45,10);
-  turn_right(95);
-  move_forward(-45, 3);
-  turn_right(95);
+  PID_Turn(45, -90);
+  PID_Drive(-45, 3);
+  PID_Turn(45, -90);
   PID_Drive(45,11);
-  turn_left(80);
+  PID_Turn(43, 80);
 
-  //go up ramp and to table
+  //go up ramp
   PID_Drive(55,23);
-  //turn_right(15);
-  PID_Drive(45,13);
-  turn_right(15);
-/*
+  PID_Drive(45,7);
+
+  //Align with wall
+  PID_Turn(45, -90);
+  move_forward(35,7);
+  Sleep(0.25);
+  PID_Drive(-35,3.75);
+  PID_Turn(45, 90);
+
+  //Drive to table
+  PID_Drive(45,6);
+  turn_right(20);
+
   //put the apple bucket down
   placeAppleBucket();
+  turn_left(20);
+
+
 /*
   //run to middle from table
   turn_left(64);
