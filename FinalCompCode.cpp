@@ -476,8 +476,8 @@ void placeAppleBucket(){
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(30);
-    move_forward(25, 0.5);
+    turn_left(35);
+    move_forward(25, 1);
   } 
   if (lever==1){
     turn_right(1);
@@ -505,8 +505,8 @@ void flip_lever(){
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(30);
-    move_forward(-25, 0.5);
+    turn_right(35);
+    move_forward(-25, 1);
   } 
   if (lever==1){
     turn_left(1);
@@ -581,8 +581,8 @@ void ERCMain()
   move_forward(45, 1.5);
   */
 //go to apple bucket line
-  PID_Drive(45,18.25);
-  turn_left(49.0);
+  PID_Drive(45,18.15);
+  turn_left(50.0);
 
   //pick up apple bucket
   appleBucketPickup();
@@ -596,18 +596,18 @@ void ERCMain()
   PID_Turn(43, 85);
 
   //go up ramp
-  PID_Drive(65,25);
+  PID_Drive(65,26);
   PID_Drive(45,8);
 
   //Align with wall
   PID_Turn(45, -90);
-  move_forward(35,8);
+  move_forward(35,9);
   Sleep(0.25);
   PID_Drive(-35,3.25);
   PID_Turn(45, 90);
 
   //Drive to table
-  PID_Drive(45, 7);
+  PID_Drive(45, 6);
   turn_right(21);
 
   //put the apple bucket down
@@ -615,22 +615,19 @@ void ERCMain()
 
   //Square up with wall
   turn_right(69);
-  move_forward(35, 8.5);
+  move_forward(35, 9);
   Sleep(0.25);
   PID_Drive(-45, 3);
 
   //Square up with table
   PID_Turn(45,90);
-  move_forward(45, 7.5);
+  move_forward(45, 9);
   Sleep(0.25);
-  PID_Drive(-45, 8);
+  PID_Drive(-45, 8.5);
 
-
-  //run to middle from table
-  //turn_left(90);
-  //move_forward(25, 0.5);
+  //Drive to fertilizer levers
   turn_left(45);
-  PID_Drive(45, 17.5);
+  PID_Drive(45, 17.75);
 
   //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
   //LCD.WriteLine(lever);
@@ -643,7 +640,7 @@ void ERCMain()
 
   move_from_lever(lever);
 
-  PID_Drive(-45, 10.5);
+  PID_Drive(-45, 10.75);
   turn_left(43);
   move_forward(25, 10.5);
   /*
