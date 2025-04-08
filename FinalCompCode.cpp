@@ -1,3 +1,4 @@
+
 #include <FEH.H>
 #include <Arduino.h>
 
@@ -216,24 +217,10 @@ void move_forward(int percent, int inches) //using encoders
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
-    int quit = 0, checks = 0;
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
-      
-      /*should quit out if stuck, not yet tested
-      checks++;
-      int current_count = left_encoder.Counts();
-      int old_encoder_count = 0;
-      if (checks%21 == 0){
-      int old_encoder_count = left_encoder.Counts();
-      }
-      if (checks%43 == 0){
-        if (old_encoder_count == current_count){
-          return;
-        }
-      }*/
-      if(right_bump.Value() == 0 && left_bump.Value() == 0)
+      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
       {
-        bump_switch_counter = bump_switch_counter+1 ;
+        bump_switch_counter += 1;
         if(bump_switch_counter == 8)
         {
         //Turn off motors
@@ -458,7 +445,7 @@ void appleBucketPickup(){
 
   Arm_Servo.SetDegree(142);
   Sleep(0.5);
-  move_forward(35,6);
+  move_forward(35,5.75);
   Arm_Servo.SetDegree(143);
   move_forward(35,0.5);
 
@@ -489,22 +476,22 @@ void placeAppleBucket(){
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(10);
-    move_forward(25, 1.5);
+    turn_left(30);
+    move_forward(25, 0.5);
   } 
   if (lever==1){
     turn_right(1);
     move_forward(25, 0.5);
   }
   if (lever==2){
-    turn_right(22);
-    move_forward(25, 1.5);
+    turn_right(30);
+    move_forward(25, 0.5);
   }
 }
 
 void flip_lever(){ 
   move_arm(120, 80);
-  move_forward(25, 6);
+  move_forward(25, 4);
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
   move_forward(-25, 4);
@@ -512,6 +499,23 @@ void flip_lever(){
   Sleep(4.0);
   move_forward(25, 5);
   Arm_Servo.SetDegree(150);
+  move_forward(-25, 5);
+}
+
+void move_from_lever (int lever){
+
+  if (lever==0){
+    turn_right(30);
+    move_forward(-25, 0.5);
+  } 
+  if (lever==1){
+    turn_left(1);
+    move_forward(-25, 0.5);
+  }
+  if (lever==2){
+    turn_left(30);
+    move_forward(-25, 0.5);
+  }
 }
 
 /*
@@ -571,11 +575,11 @@ void ERCMain()
     {
     Color = CDS_Sensor.Value();
   }
-*/
-                            Sleep(3.0);
+
+  Sleep(3.0);
   move_forward(-45, 1.5);
   move_forward(45, 1.5);
-  
+  */
 //go to apple bucket line
   PID_Drive(45,18.25);
   turn_left(49.0);
@@ -585,44 +589,64 @@ void ERCMain()
 
   //drive to front of ramp & line up
   PID_Drive(-45,10);
-  PID_Turn(45, -90);
+  PID_Turn(45, -93);
   PID_Drive(-45, 3);
-  PID_Turn(45, -90);
-  PID_Drive(45,11);
-  PID_Turn(43, 80);
+  PID_Turn(45, -93);
+  PID_Drive(45,10.75);
+  PID_Turn(43, 85);
 
   //go up ramp
-  PID_Drive(55,23);
-  PID_Drive(45,7);
+  PID_Drive(65,25);
+  PID_Drive(45,8);
 
   //Align with wall
   PID_Turn(45, -90);
-  move_forward(35,7);
+  move_forward(35,8);
   Sleep(0.25);
-  PID_Drive(-35,3.75);
+  PID_Drive(-35,3.25);
   PID_Turn(45, 90);
 
   //Drive to table
-  PID_Drive(45,6);
-  turn_right(20);
+  PID_Drive(45, 7);
+  turn_right(21);
 
   //put the apple bucket down
   placeAppleBucket();
-  turn_left(20);
+
+  //Square up with wall
+  turn_right(69);
+  move_forward(35, 8.5);
+  Sleep(0.25);
+  PID_Drive(-45, 3);
+
+  //Square up with table
+  PID_Turn(45,90);
+  move_forward(45, 7.5);
+  Sleep(0.25);
+  PID_Drive(-45, 8);
 
 
-/*
   //run to middle from table
-  turn_left(64);
-  PID_Drive(25, 14.5);
+  //turn_left(90);
+  //move_forward(25, 0.5);
+  turn_left(45);
+  PID_Drive(45, 17.5);
 
-  int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
-  LCD.WriteLine(lever);
-  lever = 2;
+  //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+  //LCD.WriteLine(lever);
+  int lever = 0;
 
   move_to_lever(lever);
+
+
   flip_lever();
-  
+
+  move_from_lever(lever);
+
+  PID_Drive(-45, 10.5);
+  turn_left(43);
+  move_forward(25, 10.5);
+  /*
   //Call “turn” and turn –37 degrees 
   turn_right(37);
   
