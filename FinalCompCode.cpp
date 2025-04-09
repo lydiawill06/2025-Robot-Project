@@ -1,4 +1,3 @@
-
 #include <FEH.H>
 #include <Arduino.h>
 
@@ -269,6 +268,38 @@ void turn_right(int degree){
     right_motor.Stop();
     left_motor.Stop();
 } 
+
+
+
+
+void check_color()
+  { 
+  //Read line color
+  float Color;
+  int Color_Counter;
+  
+  //Find value of CDS cell to determine color
+  Color = CDS_Sensor.Value();
+  while(1)
+  {
+    while(Color > 2.0)
+    {
+        Color = CDS_Sensor.Value();
+    }
+    if(Color <= 2.0)
+    {
+        Color_Counter += 1;
+    }
+    if(Color_Counter == 10)
+    {
+        return;
+    }
+  }
+}
+
+
+
+
 
 void check_light()
   { 
@@ -567,14 +598,9 @@ void ERCMain()
   Arm_Servo.SetMax(2400);
     //Read line color
   float Color;
-  
-  //Find value of CDS cell to determine color
-  Color = CDS_Sensor.Value();
-/*
-  while(Color > 2.0)
-    {
-    Color = CDS_Sensor.Value();
-  }
+  /*
+  //Wait for light to turn red
+  check_color();
 
   Sleep(3.0);
   move_forward(-45, 1.5);
