@@ -1,3 +1,4 @@
+
 #include <FEH.H>
 #include <Arduino.h>
 
@@ -10,6 +11,24 @@ AnalogInputPin CDS_Sensor(FEHIO::Pin14);
 FEHServo Arm_Servo(FEHServo::Servo0);
 DigitalInputPin right_bump(FEHIO::Pin1);
 DigitalInputPin left_bump(FEHIO::Pin4);
+
+AnalogInputPin right_opto(FEHIO::Pin2);
+AnalogInputPin middle_opto(FEHIO::Pin3);
+AnalogInputPin left_opto(FEHIO::Pin6);
+
+#define leftOffLow 2
+#define leftOffHigh 4
+#define rightOffLow 2
+#define rightOffHigh 4
+#define middleOffLow 2
+#define middleOffHigh 4
+
+#define leftOnLowLever 0
+#define leftOnHighLever 2.7
+#define rightOnLowLever 0
+#define rightOnHighLever 3
+#define middleOnLowLever 0
+#define middleOnHighLever 3
 
 
 // PID Constants (To be tuned)
@@ -219,14 +238,11 @@ void move_forward(int percent, int inches) //using encoders
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
       if((right_bump.Value() == 0) && (left_bump.Value() == 0))
       {
-        bump_switch_counter += 1;
-        if(bump_switch_counter == 8)
-        {
+
         //Turn off motors
         right_motor.Stop();
         left_motor.Stop();
         return;
-        }
       }
 
     };
@@ -549,6 +565,55 @@ void move_from_lever (int lever){
   }
 }
 
+//currently will move in a circle if the optosensor has crossed over the line
+void check_line(int move){
+  int inches = 0;
+  while(inches<move){
+    move_forward(45, 1);
+  while((leftOffLow <= left_opto.Value()) && (left_opto.Value() < leftOffHigh) &&
+  (middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) 
+  {
+      turn_left(1);
+  }
+  while((rightOffLow <= right_opto.Value()) && (right_opto.Value() < rightOffHigh) &&
+  (middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) {
+      turn_right(1);
+  }
+  LCD.Write("right: ");
+  LCD.Write(right_opto.Value());\
+  LCD.Write(" middle: ");
+  LCD.Write(middle_opto.Value());
+  LCD.Write("  left: ");
+  LCD.WriteLine(left_opto.Value());
+  Sleep(3.0);
+  inches++;
+  if(inches%5==0){
+    LCD.Clear();
+  }
+}
+}
+
+//currently will move in a circle if the optosensor has crossed over the line
+void check_line_lever(){
+
+
+  while((left_opto.Value() > leftOnHighLever) && (middle_opto.Value() > middleOnHighLever)) 
+  {
+      turn_left(1);
+      move_forward(45, 0.25);
+  }
+  while((right_opto.Value() > rightOnHighLever) && (middle_opto.Value() > middleOnHighLever)) {
+      turn_right(1);
+      move_forward(45, 0.25);
+
+  }
+  LCD.WriteLine(right_opto.Value());
+  LCD.WriteLine(middle_opto.Value());
+  LCD.WriteLine(left_opto.Value());
+
+}
+
+
 /*
 Line_Follow(in percentage) 
 
@@ -557,14 +622,6 @@ Line_Follow(in percentage)
   *Steal optosensor code from exploration 02 
 
   Follow line until optosensors read that it has reached the end of the line (all 3 optosensors off the line) 
-
-Check_Line() 
-
-  If right and left optosensors values show that they are not on the line, and the middle optosensor value shows that it is, do nothing 
-
-  If right and middle optosensors values show that they are not on the line, and the left optosensor value shows that it is, call Turn() to turn slightly left 
-
-  If left and middle optosensors values show that they are not on the line, and the right optosensor value shows that it is, call Turn() to turn slightly right 
 
 Turn_Compost 
 
@@ -622,10 +679,12 @@ void ERCMain()
   PID_Turn(43, 85);
 
   //go up ramp
+  move_arm(37, 140);
   PID_Drive(65,26);
   PID_Drive(45,8);
 
   //Align with wall
+  move_arm(140, 37);
   PID_Turn(45, -90);
   move_forward(35,9);
   Sleep(0.25);
@@ -633,7 +692,7 @@ void ERCMain()
   PID_Turn(45, 90);
 
   //Drive to table
-  PID_Drive(45, 6);
+  PID_Drive(45, 8);
   turn_right(21);
 
   //put the apple bucket down
@@ -652,8 +711,10 @@ void ERCMain()
   PID_Drive(-45, 8.5);
 
   //Drive to fertilizer levers
-  turn_left(45);
-  PID_Drive(45, 17.75);
+  turn_left(47);
+  PID_Drive(45, 18.5);
+  check_line_lever();
+
 
   //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
   //LCD.WriteLine(lever);
@@ -666,25 +727,17 @@ void ERCMain()
 
   move_from_lever(lever);
 
-  PID_Drive(-45, 10.75);
+  PID_Drive(-45, 11);
   turn_left(43);
-  move_forward(25, 10.5);
-  /*
-  //Call “turn” and turn –37 degrees 
-  turn_right(37);
+  move_forward(25, 7.5);
   
-  //Call “move forward” to move backward 16 inches 
-  move_forward(-25, 16);
-  
-  //Call “turn” and turn 54 degrees 
-  turn_left(54);
-  
+
   //Call “check line” 
-  //check_line();
-  
+  check_line(3);
+  move_forward(45, 3);
   //Call “check light” 
-  check_light();
-  
+  //check_light();
+  /*
   //move to window & open it
   window();
   
