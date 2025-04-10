@@ -1,10 +1,10 @@
-
 #include <FEH.H>
 #include <Arduino.h>
 
 FEHMotor left_motor(FEHMotor::Motor1, 9.0);
 FEHMotor right_motor(FEHMotor::Motor2, 9.0);
 FEHMotor compost_motor(FEHMotor::Motor3, 5.0);
+
 DigitalEncoder right_encoder(FEHIO::Pin11);
 DigitalEncoder left_encoder(FEHIO::Pin8);
 AnalogInputPin CDS_Sensor(FEHIO::Pin14);
@@ -29,6 +29,10 @@ AnalogInputPin left_opto(FEHIO::Pin6);
 #define rightOnHighLever 3
 #define middleOnLowLever 0
 #define middleOnHighLever 3
+
+#define noLight 2.0
+#define blueMax 2.0
+#define redMax 1.1
 
 
 // PID Constants (To be tuned)
@@ -170,7 +174,6 @@ void PID_Drive(float maxPower, float targetDistance)
   right_motor.Stop();
 }
 
-
 // PID_Turn function: Using separate PID variables for each motor.
 void PID_Turn(float maxPower, float targetDegrees) 
 {
@@ -219,8 +222,6 @@ void PID_Turn(float maxPower, float targetDegrees)
     right_motor.Stop();
 }
 
-
-
 void move_forward(int percent, int inches) //using encoders
 {
     int bump_switch_counter = 0;
@@ -238,7 +239,6 @@ void move_forward(int percent, int inches) //using encoders
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
       if((right_bump.Value() == 0) && (left_bump.Value() == 0))
       {
-
         //Turn off motors
         right_motor.Stop();
         left_motor.Stop();
@@ -285,9 +285,6 @@ void turn_right(int degree){
     left_motor.Stop();
 } 
 
-
-
-
 void check_color()
   { 
   //Read line color
@@ -313,10 +310,6 @@ void check_color()
   }
 }
 
-
-
-
-
 void check_light()
   { 
   //Read line color
@@ -325,7 +318,7 @@ void check_light()
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
 
-  while(Color > 2.0)
+  while(Color > noLight)
   {
     Color = CDS_Sensor.Value();
     LCD.WriteLine(CDS_Sensor.Value());
@@ -333,7 +326,7 @@ void check_light()
   }
 
 
-  if(Color > 1.1 && Color < 2.0) //Light is blue
+  if(Color > redMax && Color < blueMax) //Light is blue
   {
   //Go to Blue
   LCD.WriteLine("BLUE");
@@ -352,7 +345,7 @@ void check_light()
   turn_right(90);
   }
 
-  if(Color < 1.1) //Light is red
+  if(Color < redMax) //Light is red
   {
   //Go to Red
   LCD.WriteLine("RED");
@@ -374,71 +367,65 @@ void check_light()
 
 void window()
 {
-  /*  
-  //When the voltage changes, call “move forward” function for 17 inches 
-    move_forward(-25, 13);
+  PID_Drive(25, 3);
+  PID_Turn(45, 78);
+  move_forward(45, 12);
 
-    Sleep(2.0);
-    
-    //Call the “turn” function at 58 degrees to turn so that robot is parallel to window 
-    turn_left(30);
+  right_encoder.ResetCounts();
+  int inches = 12;
+  int counts = inches * 33.7408479355;
+
+  right_motor.SetPercent(35);
+  while(right_encoder.Counts() < counts)
+  {}
+
+  right_motor.Stop();
   
-    Sleep(2.0);
-  
-   
-    move_forward(25, 4);
-    Sleep(2.0);
-  
-    turn_left(15);
-    move_forward(25, 1.5);
-    Sleep(2.0);
+  inches = 6;
+  int percent = 35;
+  //Call the “move forward” function for 5 inches. 
+  counts = inches * 33.7408479355;
+  //Reset encoder counts
+  right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
 
-    turn_right(20);
-    move_forward(-25,1.5);
-    Sleep(2.0);
-    */
-    int inches = 4;
-    int percent = 35;
-    //Call the “move forward” function for 5 inches. 
-    int counts = inches * 33.7408479355;
-    //Reset encoder counts
-    right_encoder.ResetCounts();
-    left_encoder.ResetCounts();
+  //Set both motors to desired percent
+  right_motor.SetPercent(-percent);
+  left_motor.SetPercent(-percent-15);
 
-    //Set both motors to desired percent
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent-15);
+  //While the average of the left and right encoder is less than counts,
+  //keep running motors
+  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
-    //While the average of the left and right encoder is less than counts,
-    //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+  //Turn off motors
+  right_motor.Stop();
+  left_motor.Stop();
+  Sleep(2.0);
 
-    //Turn off motors
-    right_motor.Stop();
-    left_motor.Stop();
-    Sleep(2.0);
-  
-    //Call “move5 forward” for backwards 5 inches. 
+  move_forward(-25, 1.25);
+  turn_left(1);
 
-    percent = -25; 
+  //Call “move5 forward” for backwards 5 inches. 
 
-    counts = inches * 33.7408479355;
-    //Reset encoder counts
-    right_encoder.ResetCounts();
-    left_encoder.ResetCounts();
+  percent = -25; 
 
-    //Set both motors to desired percent
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent + 15);
+  inches = 7;
+  counts = inches * 33.7408479355;
+  //Reset encoder counts
+  right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
 
-    //While the average of the left and right encoder is less than counts,
-    //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+  //Set both motors to desired percent
+  right_motor.SetPercent(-percent);
+  left_motor.SetPercent(-percent + 7);
 
-    //Turn off motors
-    right_motor.Stop();
-    left_motor.Stop();
+  //While the average of the left and right encoder is less than counts,
+  //keep running motors
+  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
+  //Turn off motors
+  right_motor.Stop();
+  left_motor.Stop();
 }
 
 void move_arm(int current_degree, int final_degree){
@@ -510,7 +497,7 @@ void placeAppleBucket(){
   move_forward(-25,2.5);
   move_forward(35,2);
 
-  Arm_Servo.SetDegree(124);
+  Arm_Servo.SetDegree(123);
   Sleep(0.5);
   
   move_forward(-35,6);
@@ -523,7 +510,7 @@ void placeAppleBucket(){
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(35);
+    turn_left(27.5);
     move_forward(25, 1);
   } 
   if (lever==1){
@@ -531,12 +518,12 @@ void move_to_lever (int lever){
     move_forward(25, 0.5);
   }
   if (lever==2){
-    turn_right(30);
-    move_forward(25, 0.5);
+    turn_right(33);
+    move_forward(25, 1);
   }
 }
 
-void flip_lever(){ 
+void flip_lever(int lever){ 
   move_arm(120, 80);
   move_forward(25, 4);
   Arm_Servo.SetDegree(152);
@@ -544,15 +531,18 @@ void flip_lever(){
   move_forward(-25, 4);
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
-  move_forward(25, 5);
-  Arm_Servo.SetDegree(150);
+  if (lever==0){
+    turn_right(3);
+  }
+  move_forward(25, 5.5);
+  Arm_Servo.SetDegree(147);
   move_forward(-25, 5);
 }
 
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(35);
+    turn_right(24.5);
     move_forward(-25, 1);
   } 
   if (lever==1){
@@ -560,8 +550,8 @@ void move_from_lever (int lever){
     move_forward(-25, 0.5);
   }
   if (lever==2){
-    turn_left(30);
-    move_forward(-25, 0.5);
+    turn_left(33);
+    move_forward(-25, 1);
   }
 }
 
@@ -649,20 +639,19 @@ Turn_Compost
 void ERCMain()
 {
 
-  //RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
-
+  RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
+/*
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
     //Read line color
   float Color;
-  /*
   //Wait for light to turn red
   check_color();
 
   Sleep(3.0);
   move_forward(-45, 1.5);
   move_forward(45, 1.5);
-  */
+
 //go to apple bucket line
   PID_Drive(45,18.15);
   turn_left(50.0);
@@ -680,11 +669,14 @@ void ERCMain()
 
   //go up ramp
   move_arm(37, 140);
-  PID_Drive(65,26);
-  PID_Drive(45,8);
+  PID_Drive(65,24);
+  move_forward(35, 0.5);
+  Sleep(1.0);
+  move_arm(140, 37);
+  Sleep(1.0);
+  PID_Drive(45,9);
 
   //Align with wall
-  move_arm(140, 37);
   PID_Turn(45, -90);
   move_forward(35,9);
   Sleep(0.25);
@@ -708,39 +700,46 @@ void ERCMain()
   PID_Turn(45,90);
   move_forward(45, 9);
   Sleep(0.25);
-  PID_Drive(-45, 8.5);
+  */
+  PID_Drive(-45, 9);
 
   //Drive to fertilizer levers
   turn_left(47);
   PID_Drive(45, 18.5);
-  check_line_lever();
+  //check_line_lever();
 
 
-  //int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
-  //LCD.WriteLine(lever);
-  int lever = 0;
+  int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+  LCD.WriteLine(lever);
+  lever = 0;
 
   move_to_lever(lever);
 
 
-  flip_lever();
+  flip_lever(lever);
 
   move_from_lever(lever);
 
-  PID_Drive(-45, 11);
-  turn_left(43);
-  move_forward(25, 7.5);
+  move_arm(150, 40);
+
+  PID_Drive(-45, 13);
+  turn_left(41);
+  move_forward(45, 10.5);
   
 
   //Call “check line” 
-  check_line(3);
-  move_forward(45, 3);
+  //check_line(3);
+
+  move_forward(45, 3.5);
+
   //Call “check light” 
   //check_light();
-  /*
+  PID_Drive(45, 10);
+  PID_Drive(-45, 6);
+  
   //move to window & open it
   window();
-  
+  /*
   //Call “move forward” to go backwards until optosensors sense a black line. If they do not after 12 inches, go to step 35 
   
   //Call “Turn Compost” 
