@@ -10,7 +10,7 @@ DigitalEncoder left_encoder(FEHIO::Pin8);
 AnalogInputPin CDS_Sensor(FEHIO::Pin14);
 FEHServo Arm_Servo(FEHServo::Servo0);
 DigitalInputPin right_bump(FEHIO::Pin1);
-DigitalInputPin left_bump(FEHIO::Pin4);
+DigitalInputPin left_bump(FEHIO::Pin5);
 
 AnalogInputPin right_opto(FEHIO::Pin2);
 AnalogInputPin middle_opto(FEHIO::Pin3);
@@ -372,13 +372,14 @@ void window()
   move_forward(45, 12);
 
   right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
+
   int inches = 12;
   int counts = inches * 33.7408479355;
 
   right_motor.SetPercent(35);
-  while(right_encoder.Counts() < counts)
+  while(right_encoder.Counts() <= counts)
   {}
-
   right_motor.Stop();
   
   inches = 6;
@@ -510,7 +511,7 @@ void placeAppleBucket(){
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(27.5);
+    turn_left(20);
     move_forward(25, 1);
   } 
   if (lever==1){
@@ -518,31 +519,51 @@ void move_to_lever (int lever){
     move_forward(25, 0.5);
   }
   if (lever==2){
-    turn_right(33);
+    turn_right(20);
     move_forward(25, 1);
   }
 }
 
 void flip_lever(int lever){ 
+  int checks = 0;
   move_arm(120, 80);
   move_forward(25, 4);
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
   move_forward(-25, 4);
+  while(checks<3){
+  if ((RCS.isLeverFlipped()==0)){
+    if (lever==0){
+      turn_left(2);
+    }
+    else if (lever==2){
+      turn_right(2);
+    }
+    move_arm(120, 80);
+    move_forward(25, 4);
+    Arm_Servo.SetDegree(152);
+    Sleep(1.0);
+    move_forward(-25, 4);
+  }
+  checks++;
+}
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
-  if (lever==0){
-    turn_right(3);
-  }
   move_forward(25, 5.5);
   Arm_Servo.SetDegree(147);
   move_forward(-25, 5);
+  if (lever==0){
+    turn_right(2*checks);
+  }
+  else if (lever=2){
+    turn_left(2*checks);
+  }
 }
 
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(24.5);
+    turn_right(22);
     move_forward(-25, 1);
   } 
   if (lever==1){
@@ -550,7 +571,7 @@ void move_from_lever (int lever){
     move_forward(-25, 0.5);
   }
   if (lever==2){
-    turn_left(33);
+    turn_left(22);
     move_forward(-25, 1);
   }
 }
@@ -701,10 +722,11 @@ void ERCMain()
   move_forward(45, 9);
   Sleep(0.25);
   */
+ 
   PID_Drive(-45, 9);
 
   //Drive to fertilizer levers
-  turn_left(47);
+  turn_left(46);
   PID_Drive(45, 18.5);
   //check_line_lever();
 
@@ -723,7 +745,7 @@ void ERCMain()
   move_arm(150, 40);
 
   PID_Drive(-45, 13);
-  turn_left(41);
+  turn_left(37);
   move_forward(45, 10.5);
   
 
