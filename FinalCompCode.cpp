@@ -136,7 +136,7 @@ void PID_Drive(float maxPower, float targetDistance)
           return; // Exit the function
       }
 
-
+/*
       // Check for collsion in both motors
       if (rightError == currentRightError && leftError == currentLeftError)
       { // Sign change detected
@@ -155,6 +155,7 @@ void PID_Drive(float maxPower, float targetDistance)
           LCD.WriteLine("Collision detected. Motors stopped.");
           return; // Exit the function
       }
+          */
 
       float leftPower = PID_Control(targetCounts, leftCounts, leftError, leftIntegral, maxPower, leftDerivative);
       float rightPower = PID_Control(targetCounts, rightCounts, rightError, rightIntegral, maxPower, rightDerivative);
@@ -404,11 +405,11 @@ void window()
   Sleep(2.0);
 
   move_forward(-25, 1.25);
-  turn_left(1);
+  turn_right(7);
 
   //Call “move5 forward” for backwards 5 inches. 
 
-  percent = -25; 
+  percent = 35; 
 
   inches = 7;
   counts = inches * 33.7408479355;
@@ -417,8 +418,8 @@ void window()
   left_encoder.ResetCounts();
 
   //Set both motors to desired percent
-  right_motor.SetPercent(-percent);
-  left_motor.SetPercent(-percent - 7);
+  right_motor.SetPercent(percent);
+  left_motor.SetPercent(percent + 22);
 
   //While the average of the left and right encoder is less than counts,
   //keep running motors
@@ -428,6 +429,7 @@ void window()
   right_motor.Stop();
   left_motor.Stop();
 }
+
 
 
 
@@ -528,18 +530,24 @@ void move_to_lever (int lever){
 
 void flip_lever(int lever){ 
   int checks = 0;
+  int turns = 0;
   move_arm(120, 80);
   move_forward(25, 4);
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
   move_forward(-25, 4);
-  while(checks<3){
-  if ((RCS.isLeverFlipped()==0)){
+  
+  while((checks<3) && (!RCS.isLeverFlipped())){
+      LCD.WriteLine(RCS.isLeverFlipped());
+    Sleep(1.0);
+  if ((!RCS.isLeverFlipped())){
     if (lever==0){
       turn_left(2);
+      turns++;
     }
     else if (lever==2){
       turn_right(2);
+      turns++;
     }
     move_arm(120, 80);
     move_forward(25, 4);
@@ -549,23 +557,26 @@ void flip_lever(int lever){
   }
   checks++;
 }
+
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
-  move_forward(25, 5.5);
-  Arm_Servo.SetDegree(147);
+  move_forward(25, 5.7);
+  Arm_Servo.SetDegree(143);
   move_forward(-25, 5);
+  
   if (lever==0){
-    turn_right(2*checks);
+    turn_right(2*turns);
   }
-  else if (lever=2){
-    turn_left(2*checks);
+  else if (lever==2){
+    turn_left(2*turns);
   }
+    
 }
 
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(22);
+    turn_right(17);
     move_forward(-25, 1);
   } 
   if (lever==1){
@@ -573,7 +584,7 @@ void move_from_lever (int lever){
     move_forward(-25, 0.5);
   }
   if (lever==2){
-    turn_left(22);
+    turn_left(20);
     move_forward(-25, 1);
   }
 }
@@ -747,28 +758,31 @@ void ERCMain()
   move_arm(150, 40);
 
   PID_Drive(-45, 13);
-  turn_left(37);
-  move_forward(45, 10.5);
+  turn_left(35);
+  PID_Drive(45, 19);
   
 
   //Call “check line” 
   //check_line(3);
 
-  move_forward(45, 3.5);
+  move_forward(45, 8);
 
   //Call “check light” 
   //check_light();
-  PID_Drive(45, 10);
   PID_Drive(-45, 6);
   
   //move to window & open it
   window();
-  
 
 
-  //EXPERIMENTAL
+
+
+
+
+
+//EXPERIMENTAL
   //Move away from window
-  move_forward(35, 1.5);
+  move_forward(35, 2);
 
   right_encoder.ResetCounts();
   int inches = 13;
@@ -785,5 +799,20 @@ void ERCMain()
   //Drive to Wall
   PID_Drive(45, 20);
   move_forward(45, 5);
+
+
+
+
+  /*
+  //Call “move forward” to go backwards until optosensors sense a black line. If they do not after 12 inches, go to step 35 
   
+  //Call “Turn Compost” 
+  //turn_compost();
+  
+  //Call “move forward” to drive forward until bumper switches sense that the robot has hit the button (or the robot has traveled more than 22 inches) 
+  move_forward(35, 10);
+  move_forward(45, 5);
+*/
+
+
 }
