@@ -365,6 +365,7 @@ void check_light()
   }
 }
 
+
 void window()
 {
   PID_Drive(25, 3);
@@ -372,14 +373,13 @@ void window()
   move_forward(45, 12);
 
   right_encoder.ResetCounts();
-  left_encoder.ResetCounts();
-
   int inches = 12;
   int counts = inches * 33.7408479355;
 
   right_motor.SetPercent(35);
-  while(right_encoder.Counts() <= counts)
+  while(right_encoder.Counts() < counts)
   {}
+
   right_motor.Stop();
   
   inches = 6;
@@ -392,7 +392,7 @@ void window()
 
   //Set both motors to desired percent
   right_motor.SetPercent(-percent);
-  left_motor.SetPercent(-percent-15);
+  left_motor.SetPercent(-percent-13);
 
   //While the average of the left and right encoder is less than counts,
   //keep running motors
@@ -418,7 +418,7 @@ void window()
 
   //Set both motors to desired percent
   right_motor.SetPercent(-percent);
-  left_motor.SetPercent(-percent + 7);
+  left_motor.SetPercent(-percent - 7);
 
   //While the average of the left and right encoder is less than counts,
   //keep running motors
@@ -428,6 +428,8 @@ void window()
   right_motor.Stop();
   left_motor.Stop();
 }
+
+
 
 void move_arm(int current_degree, int final_degree){
 
@@ -761,14 +763,27 @@ void ERCMain()
   
   //move to window & open it
   window();
-  /*
-  //Call “move forward” to go backwards until optosensors sense a black line. If they do not after 12 inches, go to step 35 
   
-  //Call “Turn Compost” 
-  //turn_compost();
+
+
+  //EXPERIMENTAL
+  //Move away from window
+  move_forward(35, 1.5);
+
+  right_encoder.ResetCounts();
+  int inches = 13;
+  int counts = inches * 33.7408479355;
+
+  right_motor.SetPercent(-35);
+  while(right_encoder.Counts() < counts)
+  {}
+  right_motor.Stop();
+
+  PID_Drive(-45, 4);
+  PID_Turn(45, 90);
   
-  //Call “move forward” to drive forward until bumper switches sense that the robot has hit the button (or the robot has traveled more than 22 inches) 
-  move_forward(35, 10);
+  //Drive to Wall
+  PID_Drive(45, 20);
   move_forward(45, 5);
-*/
+  
 }
