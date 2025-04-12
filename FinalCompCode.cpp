@@ -34,7 +34,6 @@ AnalogInputPin left_opto(FEHIO::Pin6);
 #define blueMax 2.0
 #define redMax 1.1
 
-
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
 float Ki = 0.0025;  // Integral gain   0.01
@@ -288,27 +287,38 @@ void turn_right(int degree){
 
 void check_color()
   { 
+    
   //Read line color
   float Color;
-  int Color_Counter;
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
-  while(1)
-  {
-    while(Color > 2.0)
-    {
-        Color = CDS_Sensor.Value();
-    }
-    if(Color <= 2.0)
-    {
-        Color_Counter += 1;
-    }
-    if(Color_Counter == 10)
-    {
-        return;
+  int start = TimeNow();
+  while(Color > 2.0) {
+    Color = CDS_Sensor.Value();
+    if((TimeNow()-start) > 29){
+      break;
     }
   }
+
+  /*while(TimeNow()-start<=30)
+  {
+    Color = CDS_Sensor.Value();
+    LCD.WriteLine(Color);
+    int color_counter = 0;
+    if(Color < 2.0)
+    {
+      color_counter++;
+    }
+    if (color_counter>=10){
+      return;
+    }
+    int check = TimeNow();
+    if(((check-start)%5)==0){
+      //LCD.Write(check-start);
+    }
+  }
+  */  
 }
 
 void check_light()
@@ -419,7 +429,7 @@ void window()
 
   //Set both motors to desired percent
   right_motor.SetPercent(percent);
-  left_motor.SetPercent(percent + 22);
+  left_motor.SetPercent(percent + 18);
 
   //While the average of the left and right encoder is less than counts,
   //keep running motors
@@ -428,7 +438,30 @@ void window()
   //Turn off motors
   right_motor.Stop();
   left_motor.Stop();
-}
+
+
+
+    //Move away from window
+    move_forward(35, 3);
+
+    right_encoder.ResetCounts();
+    inches = 12;
+    counts = inches * 33.7408479355;
+  
+    right_motor.SetPercent(-35);
+    while(right_encoder.Counts() < counts)
+    {
+      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
+        {
+          //Turn off motors
+          right_motor.Stop();
+          left_motor.Stop();
+          return;
+        }
+    }
+    right_motor.Stop();
+
+  }
 
 
 
@@ -491,13 +524,13 @@ void appleBucketPickup(){
   Arm_Servo.SetDegree(144);
   move_forward(35,0.5);
 
-  move_arm(137, 37);
+  move_arm(137, 60);
 
 }
 
 void placeAppleBucket(){
 
-  move_arm(47, 115);
+  move_arm(50, 115);
   
   move_forward(-25,2.5);
   move_forward(35,2);
@@ -536,7 +569,7 @@ void flip_lever(int lever){
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
   move_forward(-25, 4);
-  
+  /*
   while((checks<3) && (!RCS.isLeverFlipped())){
       LCD.WriteLine(RCS.isLeverFlipped());
     Sleep(1.0);
@@ -557,20 +590,20 @@ void flip_lever(int lever){
   }
   checks++;
 }
-
+*/
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
   move_forward(25, 5.7);
   Arm_Servo.SetDegree(143);
   move_forward(-25, 5);
-  
+  /*
   if (lever==0){
     turn_right(2*turns);
   }
   else if (lever==2){
     turn_left(2*turns);
   }
-    
+    */
 }
 
 void move_from_lever (int lever){
@@ -638,43 +671,37 @@ void check_line_lever(){
 }
 
 
-/*
-Line_Follow(in percentage) 
 
-  Drive straight if only middle optosensor is over the line 
+void turn_compost()
+{
 
-  *Steal optosensor code from exploration 02 
+  //Turn Compost Motor
+  compost_motor.SetPercent(55);
+  //Turn Motor for specified time
+  int Start_Time = TimeNow();
+  while((TimeNow() - Start_Time) < 3.5)
+  {}
 
-  Follow line until optosensors read that it has reached the end of the line (all 3 optosensors off the line) 
+  Sleep(0.5);
 
-Turn_Compost 
+  //Turn Compost Motor Back
+  compost_motor.SetPercent(-55);
+  //Turn Motor for specified time
+  Start_Time = TimeNow();
+  while((TimeNow() - Start_Time) < 3.5)
+  {}
+}
 
-  Rotate servo motor on the back 180 degrees. 
 
-  Call “move forward” to go back 3 inches. 
-
-  Rotate servo motor on the back -180 degrees. 
-
-  Call “move forward” to go forward 3 inches. 
-
-  Rotate servo motor on the back 180 degrees. 
-
-  Rotate servo motor on the back -180 degrees. 
-
-  Call “move forward” to go back 3 inches. 
-
-  Rotate Servo motor on the back 180 degrees 
-
-  Call “Move forward” to go forward 3 inches. 
-
-  Rotate Servo motor on the back -180 degrees 
-*/
 
 void ERCMain()
 {
-
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
-/*
+  LCD.Clear();
+
+  check_color();
+
+  LCD.Clear();
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
     //Read line color
@@ -683,8 +710,10 @@ void ERCMain()
   check_color();
 
   Sleep(3.0);
-  move_forward(-45, 1.5);
-  move_forward(45, 1.5);
+  /*
+  move_forward(-45, 1);
+  move_forward(45, 1);
+*/
 
 //go to apple bucket line
   PID_Drive(45,18.15);
@@ -692,29 +721,30 @@ void ERCMain()
 
   //pick up apple bucket
   appleBucketPickup();
-
+LCD.WriteLine("Apple Bucket Yay!!!");
   //drive to front of ramp & line up
   PID_Drive(-45,10);
-  PID_Turn(45, -93);
+  PID_Turn(45, -90);
   PID_Drive(-45, 3);
-  PID_Turn(45, -93);
-  PID_Drive(45,10.75);
-  PID_Turn(43, 85);
+  PID_Turn(45, -85);
+  PID_Drive(45,10.25);
+  PID_Turn(43, 86);
 
   //go up ramp
-  move_arm(37, 140);
-  PID_Drive(65,24);
-  move_forward(35, 0.5);
+  move_arm(60, 140);
+  PID_Drive(60,24);
+  move_forward(30, 0.5);
+  move_forward(20, 0.5);
   Sleep(1.0);
-  move_arm(140, 37);
+  move_arm(140, 50);
   Sleep(1.0);
-  PID_Drive(45,9);
+  PID_Drive(45,5.5);
 
   //Align with wall
   PID_Turn(45, -90);
   move_forward(35,9);
   Sleep(0.25);
-  PID_Drive(-35,3.25);
+  PID_Drive(-35,3);
   PID_Turn(45, 90);
 
   //Drive to table
@@ -723,6 +753,7 @@ void ERCMain()
 
   //put the apple bucket down
   placeAppleBucket();
+  LCD.WriteLine("Apple Bucket Gone!!!");
 
   //Square up with wall
   turn_right(69);
@@ -734,7 +765,7 @@ void ERCMain()
   PID_Turn(45,90);
   move_forward(45, 9);
   Sleep(0.25);
-  */
+
  
   PID_Drive(-45, 9);
 
@@ -742,6 +773,7 @@ void ERCMain()
   turn_left(46);
   PID_Drive(45, 18.5);
   //check_line_lever();
+  LCD.WriteLine("Going to Lever!!!");
 
 
   int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
@@ -753,66 +785,51 @@ void ERCMain()
 
   flip_lever(lever);
 
+  LCD.WriteLine("Hit it!!!");
+
   move_from_lever(lever);
 
   move_arm(150, 40);
 
   PID_Drive(-45, 13);
-  turn_left(35);
-  PID_Drive(45, 19);
+  turn_left(37);
+  move_forward(45, 10.5);
   
 
   //Call “check line” 
   //check_line(3);
 
-  move_forward(45, 8);
+  move_forward(45, 3.5);
 
   //Call “check light” 
   //check_light();
+  LCD.WriteLine("Moving to Lights!!!");
+
+  PID_Drive(45, 10);
   PID_Drive(-45, 6);
   
   //move to window & open it
+  LCD.WriteLine("Windows!!!");
+
   window();
 
+  //Drive away from window
+  LCD.WriteLine("Leaving!!!");
 
-
-
-
-
-
-//EXPERIMENTAL
-  //Move away from window
-  move_forward(35, 2);
-
-  right_encoder.ResetCounts();
-  int inches = 13;
-  int counts = inches * 33.7408479355;
-
-  right_motor.SetPercent(-35);
-  while(right_encoder.Counts() < counts)
-  {}
-  right_motor.Stop();
-
-  PID_Drive(-45, 4);
+  PID_Drive(-45, 5);
   PID_Turn(45, 90);
   
-  //Drive to Wall
+  //Drive to wall
   PID_Drive(45, 20);
   move_forward(45, 5);
+  PID_Drive(-35, 3.25);
 
+  LCD.Clear();
 
+  //Drive to table
+  PID_Turn(45, 90);
+  PID_Drive(35, 10);
+  LCD.WriteLine("Button!!!");
 
-
-  /*
-  //Call “move forward” to go backwards until optosensors sense a black line. If they do not after 12 inches, go to step 35 
-  
-  //Call “Turn Compost” 
-  //turn_compost();
-  
-  //Call “move forward” to drive forward until bumper switches sense that the robot has hit the button (or the robot has traveled more than 22 inches) 
-  move_forward(35, 10);
-  move_forward(45, 5);
-*/
-
-
+  PID_Drive(-40, 50);
 }
