@@ -333,7 +333,7 @@ void check_light()
   {
     Color = CDS_Sensor.Value();
     LCD.WriteLine(CDS_Sensor.Value());
-    move_forward(25, 1);
+    move_forward(35, 1);
   }
 
 
@@ -515,13 +515,13 @@ void move_arm(int current_degree, int final_degree){
 
 void appleBucketPickup(){
 
-  Arm_Servo.SetDegree(135);
+  Arm_Servo.SetDegree(140);
   Sleep(0.5);
   move_forward(35,5.75);
-  Arm_Servo.SetDegree(136);
+  Arm_Servo.SetDegree(141);
   move_forward(35,0.5);
 
-  Arm_Servo.SetDegree(137);
+  Arm_Servo.SetDegree(142);
   move_forward(35,0.5);
 
   move_arm(137, 60);
@@ -533,31 +533,31 @@ void placeAppleBucket(){
   move_arm(50, 115);
   
   move_forward(-25,2.5);
-  move_forward(35,2);
+  move_forward(45,2);
 
   Arm_Servo.SetDegree(116);
   Sleep(0.5);
   
-  move_forward(-35,6);
+  move_forward(-45,6);
   Arm_Servo.SetDegree(122);
 
-  move_forward(35,5);
-  move_forward(-35, 5);
+  move_forward(45,5);
+  move_forward(-45, 5);
 }
 
 void move_to_lever (int lever){
 
   if (lever==0){
     turn_left(20);
-    move_forward(25, 1);
+    move_forward(35, 1);
   } 
   if (lever==1){
     turn_right(1);
-    move_forward(25, 0.5);
+    move_forward(35, 0.5);
   }
   if (lever==2){
-    turn_right(20);
-    move_forward(25, 1);
+    turn_right(40);
+    move_forward(35, 1);
   }
 }
 
@@ -565,10 +565,10 @@ void flip_lever(int lever){
   int checks = 0;
   int turns = 0;
   move_arm(120, 80);
-  move_forward(25, 4);
+  move_forward(45, 4);
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
-  move_forward(-25, 4);
+  move_forward(-45, 4);
   /*
   while((checks<3) && (!RCS.isLeverFlipped())){
       LCD.WriteLine(RCS.isLeverFlipped());
@@ -593,9 +593,9 @@ void flip_lever(int lever){
 */
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
-  move_forward(25, 5.7);
+  move_forward(35, 5.7);
   Arm_Servo.SetDegree(143);
-  move_forward(-25, 5);
+  move_forward(-45, 5);
   /*
   if (lever==0){
     turn_right(2*turns);
@@ -609,16 +609,16 @@ void flip_lever(int lever){
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(17);
-    move_forward(-25, 1);
+    turn_right(20);
+    move_forward(-35, 1);
   } 
   if (lever==1){
     turn_left(1);
-    move_forward(-25, 0.5);
+    move_forward(-35, 0.5);
   }
   if (lever==2){
     turn_left(20);
-    move_forward(-25, 1);
+    move_forward(-35, 1);
   }
 }
 
@@ -745,26 +745,22 @@ void ERCMain()
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
   LCD.Clear();
 
-/*
-  LCD.Clear();
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
     //Read line color
   float Color;
   //Wait for light to turn red
   check_color();
+  LCD.WriteLine("Starting!!!");
 
-  */
-
-  Sleep(3.0);
-  /*
   move_forward(-45, 1);
   move_forward(45, 1);
-*/
+
+  LCD.WriteLine("Start Button!!!");
 
 //go to apple bucket line
-  PID_Drive(45,18);
-  turn_left(45.0);
+  PID_Drive(45,17.9);
+  turn_left(49);
 
   //pick up apple bucket
   appleBucketPickup();
@@ -772,7 +768,7 @@ LCD.WriteLine("Apple Bucket Yay!!!");
 
 
   //drive to Composter
-  PID_Drive(-45,7);
+  PID_Drive(-45,6);
   Sleep(0.2);
   turn_right(35);
   Sleep(0.2);
@@ -780,11 +776,11 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   Sleep(0.2);
   PID_Turn(25, 110);
   PID_Drive(45,15);
-  move_forward(35, 7);
+  move_forward(20, 7);
   PID_Drive(-35, 2.3);
   Sleep(0.2);
   PID_Turn(30, 80);
-  move_forward_until(-35, 3.8, 2);
+  move_forward_until(-35, 4, 2);
 
   //Turn Composter
   turn_compost();
@@ -804,7 +800,7 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   Sleep(0.2);
   PID_Drive(-35, 3);
   Sleep(0.2);
-  PID_Turn(35, 86);
+  PID_Turn(35, 85);
 
   //go up ramp
   move_arm(60, 140);
@@ -844,7 +840,12 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   move_forward_until(45, 3, 2);
   Sleep(0.25);
 
+  //drive to humidifier button
+  move_forward(-45, 5);
+  turn_left(105);
+  check_light();
 
+/*
   //Drive to fertilizer levers
   PID_Drive(-45, 9);
   turn_left(46);
@@ -865,6 +866,8 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   LCD.WriteLine("Hit it!!!");
 
   move_from_lever(lever);
+
+/*
 
   move_arm(150, 40);
 
@@ -909,4 +912,5 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   LCD.WriteLine("Button!!!");
 
   PID_Drive(-40, 50);
+  */
 }
