@@ -231,8 +231,8 @@ void move_forward(int percent, int inches) //using encoders
     left_encoder.ResetCounts();
 
     //Set both motors to desired percent
-    right_motor.SetPercent(-percent);
-    left_motor.SetPercent(-percent);
+    right_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
+    left_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
 
     //While the average of the left and right encoder is less than counts,
     //keep running motors
@@ -260,8 +260,8 @@ void turn_left(int degree){
 
     int percent = 40;
     int counts = degree * 1.92857142857;
-    right_motor.SetPercent(-1*(percent));
-    left_motor.SetPercent((percent));
+    right_motor.SetPercent(-1*(percent)*(11.5/Battery.Voltage()));
+    left_motor.SetPercent((percent)*(11.5/Battery.Voltage()));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
     //Turn off motors
@@ -276,8 +276,8 @@ void turn_right(int degree){
 
     int percent = 40;
     int counts = degree * 1.92857142857;
-    right_motor.SetPercent(percent);
-    left_motor.SetPercent(-1* (percent));
+    right_motor.SetPercent(percent*(11.5/Battery.Voltage()));
+    left_motor.SetPercent(-1* (percent)*(11.5/Battery.Voltage()));
     while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
 
     //Turn off motors
@@ -515,13 +515,13 @@ void move_arm(int current_degree, int final_degree){
 
 void appleBucketPickup(){
 
-  Arm_Servo.SetDegree(142);
+  Arm_Servo.SetDegree(135);
   Sleep(0.5);
   move_forward(35,5.75);
-  Arm_Servo.SetDegree(143);
+  Arm_Servo.SetDegree(136);
   move_forward(35,0.5);
 
-  Arm_Servo.SetDegree(144);
+  Arm_Servo.SetDegree(137);
   move_forward(35,0.5);
 
   move_arm(137, 60);
@@ -535,11 +535,11 @@ void placeAppleBucket(){
   move_forward(-25,2.5);
   move_forward(35,2);
 
-  Arm_Servo.SetDegree(123);
+  Arm_Servo.SetDegree(116);
   Sleep(0.5);
   
   move_forward(-35,6);
-  Arm_Servo.SetDegree(126);
+  Arm_Servo.SetDegree(122);
 
   move_forward(35,5);
   move_forward(-35, 5);
@@ -622,6 +622,7 @@ void move_from_lever (int lever){
   }
 }
 
+
 //currently will move in a circle if the optosensor has crossed over the line
 void check_line(int move){
   int inches = 0;
@@ -675,22 +676,67 @@ void check_line_lever(){
 void turn_compost()
 {
 
-  //Turn Compost Motor
-  compost_motor.SetPercent(55);
-  //Turn Motor for specified time
-  int Start_Time = TimeNow();
-  while((TimeNow() - Start_Time) < 3.5)
-  {}
-
-  Sleep(0.5);
-
-  //Turn Compost Motor Back
-  compost_motor.SetPercent(-55);
-  //Turn Motor for specified time
-  Start_Time = TimeNow();
-  while((TimeNow() - Start_Time) < 3.5)
-  {}
+   //Turn Compost Motor
+   compost_motor.SetPercent(65);
+   //Turn Motor for specified time
+   int Start_Time = TimeNow();
+   while((TimeNow() - Start_Time) < 3.8)
+   {}
+   compost_motor.Stop();
+ 
+ 
+   Sleep(0.5);
+ 
+   //Turn Compost Motor Back
+   compost_motor.SetPercent(-65);
+   //Turn Motor for specified time
+   Start_Time = TimeNow();
+   while((TimeNow() - Start_Time) < 3.9)
+   {}
+   compost_motor.Stop();
 }
+
+
+
+
+
+void move_forward_until(int percent, int inches, int time) //using encoders
+{
+    int bump_switch_counter = 0;
+    int counts = inches * 33.7408479355;
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    int Start = TimeNow();
+    //Set both motors to desired percent
+    right_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
+    left_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
+      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
+      {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+      }
+
+      if((TimeNow() - Start) >= time)
+      {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+      }
+    };
+    right_motor.Stop();
+    left_motor.Stop();
+
+}
+
 
 
 
@@ -699,8 +745,7 @@ void ERCMain()
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
   LCD.Clear();
 
-  check_color();
-
+/*
   LCD.Clear();
   Arm_Servo.SetMin(600);
   Arm_Servo.SetMax(2400);
@@ -709,6 +754,8 @@ void ERCMain()
   //Wait for light to turn red
   check_color();
 
+  */
+
   Sleep(3.0);
   /*
   move_forward(-45, 1);
@@ -716,19 +763,48 @@ void ERCMain()
 */
 
 //go to apple bucket line
-  PID_Drive(45,18.15);
-  turn_left(50.0);
+  PID_Drive(45,18);
+  turn_left(45.0);
 
   //pick up apple bucket
   appleBucketPickup();
 LCD.WriteLine("Apple Bucket Yay!!!");
-  //drive to front of ramp & line up
-  PID_Drive(-45,10);
-  PID_Turn(45, -90);
-  PID_Drive(-45, 3);
-  PID_Turn(45, -85);
-  PID_Drive(45,10.25);
-  PID_Turn(43, 86);
+
+
+  //drive to Composter
+  PID_Drive(-45,7);
+  Sleep(0.2);
+  turn_right(35);
+  Sleep(0.2);
+  PID_Drive(-45, 6);
+  Sleep(0.2);
+  PID_Turn(25, 110);
+  PID_Drive(45,15);
+  move_forward(35, 7);
+  PID_Drive(-35, 2.3);
+  Sleep(0.2);
+  PID_Turn(30, 80);
+  move_forward_until(-35, 3.8, 2);
+
+  //Turn Composter
+  turn_compost();
+
+  //go to ramp
+  move_forward(35, 4);
+  PID_Turn(45, -86);
+  Sleep(0.2);
+  move_forward(35, 4);
+  Sleep(0.2);
+  PID_Drive(-35, 13);
+  PID_Turn(45, 90);
+  PID_Drive(35, 12);
+
+  //align with wall
+  move_forward_until(35, 4, 3);
+  Sleep(0.2);
+  PID_Drive(-35, 3);
+  Sleep(0.2);
+  PID_Turn(35, 86);
 
   //go up ramp
   move_arm(60, 140);
@@ -748,7 +824,8 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   PID_Turn(45, 90);
 
   //Drive to table
-  PID_Drive(45, 8);
+  PID_Drive(45, 5);
+  move_forward_until(45, 4, 2);
   turn_right(21);
 
   //put the apple bucket down
@@ -763,13 +840,13 @@ LCD.WriteLine("Apple Bucket Yay!!!");
 
   //Square up with table
   PID_Turn(45,90);
-  move_forward(45, 9);
+  move_forward(45, 7);
+  move_forward_until(45, 3, 2);
   Sleep(0.25);
 
- 
-  PID_Drive(-45, 9);
 
   //Drive to fertilizer levers
+  PID_Drive(-45, 9);
   turn_left(46);
   PID_Drive(45, 18.5);
   //check_line_lever();
