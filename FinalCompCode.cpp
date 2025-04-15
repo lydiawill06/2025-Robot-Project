@@ -677,7 +677,7 @@ void turn_compost()
 {
 
    //Turn Compost Motor
-   compost_motor.SetPercent(65);
+   compost_motor.SetPercent(65*(11.5/Battery.Voltage()));
    //Turn Motor for specified time
    int Start_Time = TimeNow();
    while((TimeNow() - Start_Time) < 3.8)
@@ -688,7 +688,7 @@ void turn_compost()
    Sleep(0.5);
  
    //Turn Compost Motor Back
-   compost_motor.SetPercent(-65);
+   compost_motor.SetPercent(-65*(11.5/Battery.Voltage()));
    //Turn Motor for specified time
    Start_Time = TimeNow();
    while((TimeNow() - Start_Time) < 3.9)
