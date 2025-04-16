@@ -30,9 +30,9 @@ AnalogInputPin left_opto(FEHIO::Pin6);
 #define middleOnLowLever 0
 #define middleOnHighLever 3
 
-#define noLight 3.0
-#define blueMax 2.3
-#define redMax 1.2
+#define noLight 3.5
+#define blueMax 3.5
+#define redMax 2.0
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -222,10 +222,10 @@ void PID_Turn(float maxPower, float targetDegrees)
     right_motor.Stop();
 }
 
-void move_forward(int percent, int inches) //using encoders
+void move_forward(int percent, float inches) //using encoders
 {
     int bump_switch_counter = 0;
-    int counts = inches * 33.7408479355;
+    float counts = inches * 33.7408479355;
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
@@ -330,14 +330,15 @@ void check_light()
   Color = CDS_Sensor.Value();
   int inches = 0;
 
-  while((Color > noLight) && (inches<18))
+  while((Color > noLight) && (inches<10))
   {
     Color = CDS_Sensor.Value();
     if((inches%2)==0){
     LCD.WriteLine(CDS_Sensor.Value());
     }
-    move_forward(35, 1);
-    inches++;
+    move_forward(25, 0.5);
+    Sleep(0.05);
+    inches += 1;
   }
 
 
@@ -346,18 +347,19 @@ void check_light()
   //Go to Blue
   LCD.WriteLine("BLUE");
   turn_left(90);
-  move_forward(25, 2.5);
+  move_forward(25, 3.5);
   turn_right(90);
-  move_forward(25, 5);
+  move_forward(25, 6);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 5);
+  PID_Drive(-25, 6);
   turn_left(90);
-  move_forward(-25, 2.5);
+  move_forward(-25, 3.5);
   turn_right(90);
+  return;
   }
 
   if(Color < redMax) //Light is red
@@ -365,18 +367,34 @@ void check_light()
   //Go to Red
   LCD.WriteLine("RED");
   turn_right(90);
-  move_forward(25, 2.5);
+  move_forward(25, 3.5);
   turn_left(90);
-  move_forward(25, 5);
+  move_forward(25, 6);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 5);
+  PID_Drive(-25, 6);
   turn_right(90);
-  move_forward(-25, 2.5);
+  move_forward(-25, 3.5);
   turn_left(90);
+  return;
+  }
+
+  //Doesn't Sense light, go straight
+  if(Color > blueMax)
+  {
+  //Go straight
+  LCD.WriteLine("No Light Detected");
+  LCD.WriteLine(CDS_Sensor.Value());
+  move_forward(35, 9);
+
+  //Sleep for 2 Seconds
+  Sleep(1.0);
+
+  //Go Back to Starting Position
+  PID_Drive(-40, 6);
   }
 }
 
@@ -394,17 +412,17 @@ void go_to_correct_button()
   LCD.WriteLine("BLUE");
   LCD.WriteLine(CDS_Sensor.Value());
   PID_Turn(45, 90);
-  move_forward(25, 3);
+  move_forward(35, 4);
   PID_Turn(45, -90);
-  move_forward(25, 5);
+  move_forward(35, 5);
 
   //Sleep for 2 Seconds
   Sleep(1.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 6);
+  move_forward(-35, 6);
   PID_Turn(45, 90);
-  move_forward(-25, 3);
+  move_forward(-35, 4);
   PID_Turn(45, -90);
   }
 
@@ -414,17 +432,17 @@ void go_to_correct_button()
   LCD.WriteLine("RED");
   LCD.WriteLine(CDS_Sensor.Value());
   PID_Turn(45, -90);
-  move_forward(25, 3);
+  move_forward(35, 4);
   PID_Turn(45, 90);
-  move_forward(25, 5);
+  move_forward(35, 6);
 
   //Sleep for 2 Seconds
   Sleep(1.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 6);
+  move_forward(-35, 6);
   PID_Turn(45, -90);
-  move_forward(-25, 3);
+  move_forward(-35, 4);
   PID_Turn(45, 90);
   }
   //Doesn't Sense light, go straight
@@ -446,7 +464,7 @@ void go_to_correct_button()
 
 void window()
 {
-  PID_Drive(25, 3);
+  PID_Drive(25, 3.5);
   PID_Turn(45, 78);
   move_forward(45, 12);
 
@@ -910,83 +928,38 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   Sleep(0.25);
   */
 
-  //drive to humidifier button
-  move_forward(-45, 4.75);
-  turn_left(104);
-  Arm_Servo.SetDegree(50);
-  Sleep(0.1);
-  PID_Drive(40, 18);
-  Sleep(1.0);
-  go_to_correct_button();
 
-  //move to window & open it
-  LCD.WriteLine("Windows!!!");
-  window();
+//drive to humidifier button
+move_forward(-45, 4.9);
+turn_left(104);
+Arm_Servo.SetDegree(50);
+Sleep(0.1);
+PID_Drive(40, 13);
+Sleep(0.5);
+check_light();
+Sleep(1.0);
 
+//move to window & open it
+LCD.WriteLine("Windows!!!");
+window();
 
+//Drive away from window
+LCD.WriteLine("Leaving!!!");
+PID_Drive(-45, 5);
+PID_Turn(45, 90);
 
+//Drive to wall
+PID_Drive(45, 20);
+move_forward(45, 5);
+PID_Drive(-35, 3.25);
+LCD.Clear();
 
-
-Sleep(10.0);
-  //drive to humidifier button
-  move_forward(-45, 5);
-  turn_left(104);
-  Arm_Servo.SetDegree(50);
-  Sleep(0.1);
-  PID_Drive(40, 17.5);
-  go_to_correct_button();
-
-  //move to window & open it
-  LCD.WriteLine("Windows!!!");
-  window();
-
-
-
-
-  Sleep(10.0);
-  //drive to humidifier button
-  move_forward(-45, 5);
-  turn_left(104);
-  Arm_Servo.SetDegree(50);
-  Sleep(0.1);
-  PID_Drive(40, 17);
-  go_to_correct_button();
-
-  //move to window & open it
-  LCD.WriteLine("Windows!!!");
-  window();
+//Drive to table
+PID_Turn(45, 90);
+PID_Drive(35, 10);
+LCD.WriteLine("Levers!!!");
 
 
-
-
-  Sleep(10.0);
-  //drive to humidifier button
-  move_forward(-45, 5);
-  turn_left(104);
-  Arm_Servo.SetDegree(50);
-  Sleep(0.1);
-  PID_Drive(40, 16.5);
-  go_to_correct_button();
-
-  //move to window & open it
-  LCD.WriteLine("Windows!!!");
-  window();
-
-
-
-  Sleep(10.0);
-  //drive to humidifier button
-  move_forward(-45, 5);
-  turn_left(104);
-  Arm_Servo.SetDegree(50);
-  Sleep(0.1);
-  PID_Drive(40, 16);
-  go_to_correct_button();
-
-  //move to window & open it
-  LCD.WriteLine("Windows!!!");
-  window();
-/*
   //Drive to fertilizer levers
   PID_Drive(-45, 9);
   turn_left(46);
