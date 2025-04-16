@@ -333,7 +333,9 @@ void check_light()
   while((Color > noLight) && (inches<18))
   {
     Color = CDS_Sensor.Value();
+    if((inches%2)==0){
     LCD.WriteLine(CDS_Sensor.Value());
+    }
     move_forward(35, 1);
     inches++;
   }
