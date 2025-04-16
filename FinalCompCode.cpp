@@ -591,11 +591,13 @@ void flip_lever(int lever){
   checks++;
 }
 */
+
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
   move_forward(35, 5.7);
   Arm_Servo.SetDegree(143);
   move_forward(-45, 5);
+  
   /*
   if (lever==0){
     turn_right(2*turns);
@@ -839,11 +841,6 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   move_forward(45, 7);
   move_forward_until(45, 3, 2);
   Sleep(0.25);
-
-  //drive to humidifier button
-  move_forward(-45, 5);
-  turn_left(105);
-  check_light();
 
 /*
   //Drive to fertilizer levers
