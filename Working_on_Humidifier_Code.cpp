@@ -321,60 +321,62 @@ void check_color()
   */  
 }
 
-/*
 void check_light()
   { 
   //Read line color
   float Color;
-  int Color_Counter;
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
+  int inches = 0;
 
-  //Move until it sense light
-  //Reset encoder counts
-  right_encoder.ResetCounts();
-  left_encoder.ResetCounts();
-
-  //Set both motors to desired percent
-  right_motor.SetPercent(-35*(11.5/Battery.Voltage()));
-  left_motor.SetPercent(-35*(11.5/Battery.Voltage()));
-
-  //While the average of the left and right encoder is less than counts,
-  //keep running motors
-  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < 18)
+  while((Color > noLight) && (inches<18))
   {
-    if((right_bump.Value() == 0) && (left_bump.Value() == 0))
-    {
-      //Turn off motors
-      right_motor.Stop();
-      left_motor.Stop();
-      return;
-    }
-    /*
-    if(Color < noLight)
-    {
-      //Reset color counter
-      Color_Counter=0;
-    }
-    if(Color < noLight)
-    {
-      //Increment color counter
-      Color_Counter++;
-    }
-    if(Color_Counter == 3)
-    {
-      //Turn off motors
-      right_motor.Stop();
-      left_motor.Stop();
-      return;
-    }
-      *//*
-  };
-  //Turn off motors
-  right_motor.Stop();
-  left_motor.Stop();
-}*/
+    Color = CDS_Sensor.Value();
+    LCD.WriteLine(CDS_Sensor.Value());
+    move_forward(35, 1);
+    inches++;
+  }
+
+
+  if(Color > redMax && Color < blueMax) //Light is blue
+  {
+  //Go to Blue
+  LCD.WriteLine("BLUE");
+  turn_left(90);
+  move_forward(25, 2.5);
+  turn_right(90);
+  move_forward(25, 5);
+
+  //Sleep for 2 Seconds
+  Sleep(2.0);
+
+  //Go Back to Starting Position
+  move_forward(-25, 5);
+  turn_left(90);
+  move_forward(-25, 2.5);
+  turn_right(90);
+  }
+
+  if(Color < redMax) //Light is red
+  {
+  //Go to Red
+  LCD.WriteLine("RED");
+  turn_right(90);
+  move_forward(25, 2.5);
+  turn_left(90);
+  move_forward(25, 5);
+
+  //Sleep for 2 Seconds
+  Sleep(2.0);
+
+  //Go Back to Starting Position
+  move_forward(-25, 5);
+  turn_right(90);
+  move_forward(-25, 2.5);
+  turn_left(90);
+  }
+}
 
 void go_to_correct_button()
 {
