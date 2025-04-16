@@ -325,6 +325,7 @@ void check_light()
   { 
   //Read line color
   float Color;
+  float min = 99;
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
@@ -333,6 +334,9 @@ void check_light()
   while((Color > noLight) && (inches<10))
   {
     Color = CDS_Sensor.Value();
+    if (min > Color){
+      min = Color;
+    }
     if((inches%2)==0){
     LCD.WriteLine(CDS_Sensor.Value());
     }
@@ -342,7 +346,7 @@ void check_light()
   }
 
 
-  if(Color > redMax && Color < blueMax) //Light is blue
+  if(min > redMax && min < blueMax) //Light is blue
   {
   //Go to Blue
   LCD.WriteLine("BLUE");
@@ -362,7 +366,7 @@ void check_light()
   return;
   }
 
-  if(Color < redMax) //Light is red
+  if(min < redMax) //Light is red
   {
   //Go to Red
   LCD.WriteLine("RED");
@@ -383,7 +387,7 @@ void check_light()
   }
 
   //Doesn't Sense light, go straight
-  if(Color > blueMax)
+  if(min > blueMax)
   {
   //Go straight
   LCD.WriteLine("No Light Detected");
