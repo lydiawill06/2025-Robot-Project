@@ -30,9 +30,9 @@ AnalogInputPin left_opto(FEHIO::Pin6);
 #define middleOnLowLever 0
 #define middleOnHighLever 3
 
-#define noLight 2.0
-#define blueMax 2.0
-#define redMax 1.1
+#define noLight 3.5
+#define blueMax 3.5
+#define redMax 2.0
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -222,10 +222,10 @@ void PID_Turn(float maxPower, float targetDegrees)
     right_motor.Stop();
 }
 
-void move_forward(int percent, int inches) //using encoders
+void move_forward(int percent, float inches) //using encoders
 {
     int bump_switch_counter = 0;
-    int counts = inches * 33.7408479355;
+    float counts = inches * 33.7408479355;
     //Reset encoder counts
     right_encoder.ResetCounts();
     left_encoder.ResetCounts();
@@ -285,6 +285,44 @@ void turn_right(int degree){
     left_motor.Stop();
 } 
 
+
+void move_forward_until(int percent, int inches, int time) //using encoders
+{
+    int bump_switch_counter = 0;
+    int counts = inches * 33.7408479355;
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    int Start = TimeNow();
+    //Set both motors to desired percent
+    right_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
+    left_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
+
+    //While the average of the left and right encoder is less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
+      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
+      {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+      }
+
+      if((TimeNow() - Start) >= time)
+      {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+      }
+    };
+    right_motor.Stop();
+    left_motor.Stop();
+
+}
+
 void check_color()
   { 
     
@@ -325,63 +363,101 @@ void check_light()
   { 
   //Read line color
   float Color;
+  float min = 99;
   
   //Find value of CDS cell to determine color
   Color = CDS_Sensor.Value();
+  int inches = 0;
+  int color_counts = 0;
 
-  while(Color > noLight)
+  while((color_counts<2) && (inches<10))
   {
     Color = CDS_Sensor.Value();
-    LCD.WriteLine(CDS_Sensor.Value());
-    move_forward(35, 1);
+    if (min > Color){
+      min = Color;
+    }
+    if (Color < noLight){
+      color_counts++;
+    }
+    if (color_counts == 1){
+      if(Color>blueMax){
+        color_counts++;
+      }
+    }
+    if((inches%2)==0){
+    LCD.WriteLine(Color);
+    }
+    move_forward(25, 0.5);
+    Sleep(0.05);
+    inches += 1;
   }
 
 
-  if(Color > redMax && Color < blueMax) //Light is blue
+  if(min > redMax && min < blueMax) //Light is blue
   {
   //Go to Blue
   LCD.WriteLine("BLUE");
-  turn_left(90);
-  move_forward(25, 2.5);
-  turn_right(90);
-  move_forward(25, 5);
+  PID_Turn(45, 90);
+  move_forward(25, 2.75);
+  PID_Turn(45, -90);
+  move_forward_until(25, 6, 3);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 5);
-  turn_left(90);
-  move_forward(-25, 2.5);
-  turn_right(90);
+  PID_Drive(-25, 6);
+  PID_Turn(45, 90);
+  move_forward(-25, 2.75);
+  PID_Turn(45, -90);
+  return;
   }
 
-  if(Color < redMax) //Light is red
+  if(min < redMax) //Light is red
   {
   //Go to Red
   LCD.WriteLine("RED");
-  turn_right(90);
-  move_forward(25, 2.5);
-  turn_left(90);
-  move_forward(25, 5);
+  PID_Turn(45, -90);
+  move_forward(25, 2.75);
+  PID_Turn(45, 90);
+  move_forward_until(25, 6, 3);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
 
   //Go Back to Starting Position
-  move_forward(-25, 5);
-  turn_right(90);
-  move_forward(-25, 2.5);
-  turn_left(90);
+  PID_Drive(-25, 6);
+  PID_Turn(45, -90);
+  move_forward(-25, 2.75);
+  PID_Turn(45, 90);
+  return;
+  }
+
+  //Doesn't Sense light, go straight
+  if(min > blueMax)
+  {
+  //Go straight
+  LCD.WriteLine("No Light Detected");
+  LCD.WriteLine(CDS_Sensor.Value());
+  move_forward_until(35, 7, 4);
+
+  //Sleep for 1 Second
+  Sleep(1.0);
+
+  //Go Back to Starting Position
+  PID_Drive(-40, 6);
   }
 }
+
 
 
 void window()
 {
   PID_Drive(25, 3);
-  PID_Turn(45, 78);
-  move_forward(45, 12);
+  Sleep(0.1);
+  PID_Turn(45, 80);
+  Sleep(0.1);
+  move_forward(30, 12);
 
   right_encoder.ResetCounts();
   int inches = 12;
@@ -393,7 +469,7 @@ void window()
 
   right_motor.Stop();
   
-  inches = 6;
+  inches = 6.2;
   int percent = 35;
   //Call the “move forward” function for 5 inches. 
   counts = inches * 33.7408479355;
@@ -421,7 +497,7 @@ void window()
 
   percent = 35; 
 
-  inches = 7;
+  inches = 7.1;
   counts = inches * 33.7408479355;
   //Reset encoder counts
   right_encoder.ResetCounts();
@@ -445,9 +521,10 @@ void window()
     move_forward(35, 3);
 
     right_encoder.ResetCounts();
-    inches = 12;
+    inches = 12.2;
     counts = inches * 33.7408479355;
   
+    int Start = TimeNow();
     right_motor.SetPercent(-35);
     while(right_encoder.Counts() < counts)
     {
@@ -458,9 +535,15 @@ void window()
           left_motor.Stop();
           return;
         }
+      if((TimeNow() - Start) >= 4)
+      {
+        //Turn off motors
+        right_motor.Stop();
+        left_motor.Stop();
+        return;
+      }
     }
     right_motor.Stop();
-
   }
 
 
@@ -538,17 +621,17 @@ void placeAppleBucket(){
   Arm_Servo.SetDegree(116);
   Sleep(0.5);
   
-  move_forward(-45,6);
+  move_forward(-30,6);
   Arm_Servo.SetDegree(122);
 
-  move_forward(45,5);
-  move_forward(-45, 5);
+  move_forward(30,5);
+  move_forward(-30, 5);
 }
 
 void move_to_lever (int lever){
 
   if (lever==0){
-    turn_left(20);
+    turn_left(17);
     move_forward(35, 1);
   } 
   if (lever==1){
@@ -565,10 +648,10 @@ void flip_lever(int lever){
   int checks = 0;
   int turns = 0;
   move_arm(120, 80);
-  move_forward(45, 4);
+  move_forward(35, 4);
   Arm_Servo.SetDegree(152);
   Sleep(1.0);
-  move_forward(-45, 4);
+  move_forward(-35, 4);
   /*
   while((checks<3) && (!RCS.isLeverFlipped())){
       LCD.WriteLine(RCS.isLeverFlipped());
@@ -591,13 +674,11 @@ void flip_lever(int lever){
   checks++;
 }
 */
-
   Arm_Servo.SetDegree(170);
   Sleep(4.0);
-  move_forward(35, 5.7);
-  Arm_Servo.SetDegree(143);
-  move_forward(-45, 5);
-  
+  move_forward(25, 5.8);
+  Arm_Servo.SetDegree(139);
+  move_forward(-35, 5);
   /*
   if (lever==0){
     turn_right(2*turns);
@@ -611,7 +692,7 @@ void flip_lever(int lever){
 void move_from_lever (int lever){
 
   if (lever==0){
-    turn_right(20);
+    turn_right(17);
     move_forward(-35, 1);
   } 
   if (lever==1){
@@ -679,7 +760,7 @@ void turn_compost()
 {
 
    //Turn Compost Motor
-   compost_motor.SetPercent(65*(11.5/Battery.Voltage()));
+   compost_motor.SetPercent(70*(11.5/Battery.Voltage()));
    //Turn Motor for specified time
    int Start_Time = TimeNow();
    while((TimeNow() - Start_Time) < 3.8)
@@ -690,53 +771,12 @@ void turn_compost()
    Sleep(0.5);
  
    //Turn Compost Motor Back
-   compost_motor.SetPercent(-65*(11.5/Battery.Voltage()));
+   compost_motor.SetPercent(-70*(11.5/Battery.Voltage()));
    //Turn Motor for specified time
    Start_Time = TimeNow();
    while((TimeNow() - Start_Time) < 3.9)
    {}
    compost_motor.Stop();
-}
-
-
-
-
-
-void move_forward_until(int percent, int inches, int time) //using encoders
-{
-    int bump_switch_counter = 0;
-    int counts = inches * 33.7408479355;
-    //Reset encoder counts
-    right_encoder.ResetCounts();
-    left_encoder.ResetCounts();
-
-    int Start = TimeNow();
-    //Set both motors to desired percent
-    right_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
-    left_motor.SetPercent(-percent*(11.5/Battery.Voltage()));
-
-    //While the average of the left and right encoder is less than counts,
-    //keep running motors
-    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts){
-      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
-      {
-        //Turn off motors
-        right_motor.Stop();
-        left_motor.Stop();
-        return;
-      }
-
-      if((TimeNow() - Start) >= time)
-      {
-        //Turn off motors
-        right_motor.Stop();
-        left_motor.Stop();
-        return;
-      }
-    };
-    right_motor.Stop();
-    left_motor.Stop();
-
 }
 
 
@@ -753,10 +793,11 @@ void ERCMain()
   float Color;
   //Wait for light to turn red
   check_color();
+
   LCD.WriteLine("Starting!!!");
 
-  move_forward(-45, 1);
-  move_forward(45, 1);
+  //move_forward(-45, 1);
+  //move_forward(45, 1);
 
   LCD.WriteLine("Start Button!!!");
 
@@ -842,27 +883,73 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   move_forward_until(45, 3, 2);
   Sleep(0.25);
 
-/*
-  //Drive to fertilizer levers
-  PID_Drive(-45, 9);
-  turn_left(46);
-  PID_Drive(45, 18.5);
-  //check_line_lever();
-  LCD.WriteLine("Going to Lever!!!");
+
+//drive to humidifier button
+move_forward(-45, 4.65);
+PID_Turn(45, 89);
+Arm_Servo.SetDegree(50);
+Sleep(0.1);
+PID_Drive(40, 14.5);
+Sleep(0.5);
+check_light();
+Sleep(1.0);
+
+//move to window & open it
+LCD.WriteLine("Windows!!!");
+window();
+
+//Drive away from window
+LCD.WriteLine("Leaving!!!");
+int inches = 6;
+  int percent = 35;
+  //Call the “move forward” function for 5 inches. 
+  int counts = inches * 33.7408479355;
+  //Reset encoder counts
+  right_encoder.ResetCounts();
+  left_encoder.ResetCounts();
+
+  //Set both motors to desired percent
+  right_motor.SetPercent(percent+15);
+  left_motor.SetPercent(percent);
+
+  //While the average of the left and right encoder is less than counts,
+  //keep running motors
+  while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+  {}
+
+  PID_Turn(45, 110);
 
 
-  int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
-  LCD.WriteLine(lever);
-  lever = 0;
 
-  move_to_lever(lever);
+//Drive to wall
+PID_Drive(45, 20);
+move_forward(45, 5);
+PID_Drive(-35, 3.25);
+LCD.Clear();
+
+//Drive to table
+PID_Turn(45, 90);
+PID_Drive(35, 5);
+move_forward_until(40, 4, 3);
+LCD.WriteLine("Levers!!!");
 
 
-  flip_lever(lever);
+//Drive to fertilizer levers
+PID_Drive(-45, 9);
+turn_left(44);
+PID_Drive(45, 18.5);
 
-  LCD.WriteLine("Hit it!!!");
+//check_line_lever();
+LCD.WriteLine("Going to Lever!!!");
+int lever = RCS.GetLever(); // Get a 0, 1, or 2 indicating which lever to pull
+LCD.WriteLine(lever);
+lever = 0;
+move_to_lever(lever);
+flip_lever(lever);
+LCD.WriteLine("Hit it!!!");
+move_from_lever(lever);
 
-  move_from_lever(lever);
+
 
 /*
 
@@ -871,7 +958,7 @@ LCD.WriteLine("Apple Bucket Yay!!!");
   PID_Drive(-45, 13);
   turn_left(37);
   move_forward(45, 10.5);
-  
+   
 
   //Call “check line” 
   //check_line(3);
@@ -910,4 +997,6 @@ LCD.WriteLine("Apple Bucket Yay!!!");
 
   PID_Drive(-40, 50);
   */
+
+
 }
