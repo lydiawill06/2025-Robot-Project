@@ -399,8 +399,8 @@ void check_light()
   //Go to Blue
   LCD.WriteLine("BLUE");
   PID_Turn(45, 90);
-  move_forward(25, 2.25);
-  PID_Turn(45, -90);
+  move_forward(25, 2);
+  PID_Turn(45, -92);
   move_forward_until(25, 6, 3);
 
   //Sleep for 2 Seconds
@@ -409,7 +409,7 @@ void check_light()
   //Go Back to Starting Position
   PID_Drive(-25, 6);
   PID_Turn(45, 90);
-  move_forward(-25, 2.25);
+  move_forward(-25, 2.2);
   PID_Turn(45, -90);
   return;
   }
@@ -452,6 +452,7 @@ void check_light()
 
 void Drive_Away_From_Window()
 {
+  Sleep(0.2);
   LCD.WriteLine("Leaving!!!");
 int inches = 6;
   int percent = 35;
@@ -469,8 +470,9 @@ int inches = 6;
   //keep running motors
   while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
   {}
+  Sleep(0.2);
 
-  PID_Turn(45, 110);
+  PID_Turn(45, 107);
 }
 
 void window()
@@ -890,8 +892,9 @@ void ERCMain()
   PID_Turn(50, 140);
   PID_Drive(45, 15);
   turn_left(30);*/
-  move_forward(-35, 0.75);
-  move_forward(35, 0.75);
+  move_forward_until(-35, 1.5, 3);
+  Sleep(1.0);
+  move_forward(25, 1.3);
 
   
 
@@ -899,7 +902,7 @@ void ERCMain()
 
 //go to apple bucket line
   PID_Drive(45,17.9);
-  turn_left(49);
+  turn_left(47);
 
   //pick up apple bucket
   appleBucketPickup();
@@ -946,7 +949,7 @@ move_forward_until(-20, 3.5, 2);
   Sleep(0.2);
   PID_Turn(30, 80);
   move_forward_until(-35, 4.25, 3);
-  move_forward(20, 0.35);
+  move_forward(20, 0.40);
 
   //Turn Composter
   turn_compost();
@@ -986,8 +989,8 @@ move_forward_until(-20, 3.5, 2);
   PID_Turn(45, 90);
 
   //Drive to table
-  PID_Drive(45, 5);
-  move_forward_until(45, 5, 3);
+  PID_Drive(45, 4);
+  move_forward_until(45, 6, 3);
   turn_right(21);
 
   //put the apple bucket down
@@ -998,7 +1001,7 @@ move_forward_until(-20, 3.5, 2);
   turn_right(69);
   move_forward(35, 9);
   Sleep(0.25);
-  PID_Drive(-45, 2.85);
+  PID_Drive(-45, 2.75);
 
   //Square up with table
   PID_Turn(45,90);
@@ -1009,7 +1012,7 @@ move_forward_until(-20, 3.5, 2);
 
 //drive to humidifier button
 move_forward(-45, 4.75);
-PID_Turn(45, 93);
+PID_Turn(45, 91);
 Arm_Servo.SetDegree(50);
 Sleep(0.1);
 PID_Drive(40, 15);
@@ -1026,20 +1029,20 @@ window();
 //Drive to wall
 PID_Drive(45, 20);
 move_forward(45, 5);
-PID_Drive(-35, 3.25);
+PID_Drive(-35, 2.85);
 LCD.Clear();
 
 //Drive to table
 PID_Turn(45, 90);
 PID_Drive(35, 5);
-move_forward_until(45, 7, 3.5);
+move_forward_until(45, 8, 4);
 LCD.WriteLine("Levers!!!");
 
 
 //Drive to fertilizer levers
 PID_Drive(-45, 9.5);
-turn_left(46);
-PID_Drive(45, 18.5);
+turn_left(50);
+PID_Drive(45, 18.25);
 
 //check_line_lever();
 LCD.WriteLine("Going to Lever!!!");
@@ -1065,7 +1068,8 @@ move_from_lever(lever);
 
  //Drive to table
  PID_Turn(45, 90);
- PID_Drive(35, 10);
+ PID_Drive(45, 7);
+ move_forward_until(35, 4, 3);
  LCD.WriteLine("Final Button!!!");
 
  move_forward(-20, 5);
