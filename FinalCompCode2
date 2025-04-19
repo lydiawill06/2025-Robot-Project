@@ -1,4 +1,5 @@
 
+
 #include <FEH.H>
 #include <Arduino.h>
 
@@ -31,9 +32,9 @@ AnalogInputPin left_opto(FEHIO::Pin6);
 #define middleOnLowLever 0
 #define middleOnHighLever 3
 
-#define noLight 3.5
-#define blueMax 3.5
-#define redMax 2.0
+#define noLight 4
+#define blueMax 3.8
+#define redMax 1.9
 
 // PID Constants (To be tuned)
 float Kp = 0.385;  // Proportional gain
@@ -324,6 +325,7 @@ void move_forward_until(int percent, int inches, int time) //using encoders
 
 }
 
+
 void check_color()
   { 
     
@@ -340,24 +342,6 @@ void check_color()
     }
   }
 
-  /*while(TimeNow()-start<=30)
-  {
-    Color = CDS_Sensor.Value();
-    LCD.WriteLine(Color);
-    int color_counter = 0;
-    if(Color < 2.0)
-    {
-      color_counter++;
-    }
-    if (color_counter>=10){
-      return;
-    }
-    int check = TimeNow();
-    if(((check-start)%5)==0){
-      //LCD.Write(check-start);
-    }
-  }
-  */  
 }
 
 void check_light()
@@ -401,7 +385,7 @@ void check_light()
   PID_Turn(45, 90);
   move_forward(25, 2);
   PID_Turn(45, -92);
-  move_forward_until(25, 6, 3);
+  move_forward_until(40, 6, 3);
 
   //Sleep for 2 Seconds
   Sleep(2.0);
@@ -452,8 +436,9 @@ void check_light()
 
 void Drive_Away_From_Window()
 {
-  Sleep(0.2);
+  Sleep(0.75);
   LCD.WriteLine("Leaving!!!");
+  move_forward(-25, 0.5);
 int inches = 6;
   int percent = 35;
   //Call the “move forward” function for 5 inches. 
@@ -470,16 +455,19 @@ int inches = 6;
   //keep running motors
   while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
   {}
-  Sleep(0.2);
+  Sleep(0.5);
 
-  PID_Turn(45, 107);
+  PID_Turn(45, 105);
 }
 
 void window()
 {
-  PID_Drive(25, 3);
+  LCD.WriteLine("Window Time Kids");
+  move_forward_until(25, 3, 2);
+  LCD.WriteLine("Move forward complete");
   Sleep(0.1);
   PID_Turn(45, 80);
+  LCD.WriteLine("Turn complete");
   Sleep(0.1);
   move_forward_until(30, 12, 4);
 
@@ -513,68 +501,6 @@ void window()
   right_motor.Stop();
   left_motor.Stop();
   Sleep(1.0);
-
-
-
-
-
-
-/*
-  //If robot failed to open window, quit out
-  if(RCS.isWindowOpen()==0)
-  {
-    move_forward(-25, 4.5);
-
-    right_encoder.ResetCounts();
-    inches = 14;
-    counts = inches * 33.7408479355;
-  
-    int Start = TimeNow();
-    right_motor.SetPercent(-35);
-    while(right_encoder.Counts() < counts)
-    {
-      if((right_bump.Value() == 0) && (left_bump.Value() == 0))
-        {
-          //Turn off motors
-          right_motor.Stop();
-          left_motor.Stop();
-          return;
-        }
-      if((TimeNow() - Start) >= 5)
-      {
-        //Turn off motors
-        right_motor.Stop();
-        left_motor.Stop();
-        return;
-      }
-    }
-
-
-//Leave Window
-    LCD.WriteLine("Leaving!!!");
-    int inches = 6;
-      int percent = 35;
-      //Call the “move forward” function for 5 inches. 
-      int counts = inches * 33.7408479355;
-      //Reset encoder counts
-      right_encoder.ResetCounts();
-      left_encoder.ResetCounts();
-    
-      //Set both motors to desired percent
-      right_motor.SetPercent(percent+15);
-      left_motor.SetPercent(percent);
-    
-      //While the average of the left and right encoder is less than counts,
-      //keep running motors
-      while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
-      {}
-    
-      PID_Turn(45, 125);
-
-
-    return;
-  }
-*/
 
 
   //Close Window
@@ -672,17 +598,7 @@ void move_arm(int current_degree, int final_degree){
     Arm_Servo.SetDegree(current_degree);
     current_degree -= 1;
         
-    //If arm can't move anymore, stop trying to move to prevent burning out motor
-    /*
-    if (current_degree == last_degree)
-    {
-        Timeout_Counter += 1;
-    }
-    if (Timeout_Counter = 5)
-    {
-        return;
-    }
-        */
+
     Sleep(0.005);
   }
 }
@@ -703,12 +619,12 @@ void appleBucketPickup(){
 
 void placeAppleBucket(){
 
-  move_arm(50, 115);
+  move_arm(50, 116);
   
   move_forward(-25,2.5);
   move_forward(45,2);
 
-  Arm_Servo.SetDegree(117);
+  Arm_Servo.SetDegree(119);
   Sleep(0.5);
   
   move_forward(-30,6);
@@ -794,55 +710,6 @@ void move_from_lever (int lever){
 }
 
 
-//currently will move in a circle if the optosensor has crossed over the line
-void check_line(int move){
-  int inches = 0;
-  while(inches<move){
-    move_forward(45, 1);
-  while((leftOffLow <= left_opto.Value()) && (left_opto.Value() < leftOffHigh) &&
-  (middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) 
-  {
-      turn_left(1);
-  }
-  while((rightOffLow <= right_opto.Value()) && (right_opto.Value() < rightOffHigh) &&
-  (middleOffLow <= middle_opto.Value()) && (middle_opto.Value() < middleOffHigh)) {
-      turn_right(1);
-  }
-  LCD.Write("right: ");
-  LCD.Write(right_opto.Value());\
-  LCD.Write(" middle: ");
-  LCD.Write(middle_opto.Value());
-  LCD.Write("  left: ");
-  LCD.WriteLine(left_opto.Value());
-  Sleep(3.0);
-  inches++;
-  if(inches%5==0){
-    LCD.Clear();
-  }
-}
-}
-
-//currently will move in a circle if the optosensor has crossed over the line
-void check_line_lever(){
-
-
-  while((left_opto.Value() > leftOnHighLever) && (middle_opto.Value() > middleOnHighLever)) 
-  {
-      turn_left(1);
-      move_forward(45, 0.25);
-  }
-  while((right_opto.Value() > rightOnHighLever) && (middle_opto.Value() > middleOnHighLever)) {
-      turn_right(1);
-      move_forward(45, 0.25);
-
-  }
-  LCD.WriteLine(right_opto.Value());
-  LCD.WriteLine(middle_opto.Value());
-  LCD.WriteLine(left_opto.Value());
-
-}
-
-
 
 void turn_compost()
 {
@@ -871,6 +738,7 @@ void turn_compost()
 
 void ERCMain()
 {
+  
   RCS.InitializeTouchMenu("1240E5WEU"); // Run Menu to select Region (e.g., A, B, C, D)
   LCD.Clear();
 
