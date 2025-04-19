@@ -1042,7 +1042,7 @@ LCD.WriteLine("Levers!!!");
 //Drive to fertilizer levers
 PID_Drive(-45, 9.5);
 turn_left(50);
-PID_Drive(45, 18.25);
+PID_Drive(45, 18.45);
 
 //check_line_lever();
 LCD.WriteLine("Going to Lever!!!");
