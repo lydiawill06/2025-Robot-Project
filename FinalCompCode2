@@ -1,5 +1,6 @@
 
 
+
 #include <FEH.H>
 #include <Arduino.h>
 
@@ -943,10 +944,6 @@ move_from_lever(lever);
  move_forward(-20, 5);
  turn_right(5);
  PID_Drive(-40, 45);
-  
 
-   
-
-  
 
 }
